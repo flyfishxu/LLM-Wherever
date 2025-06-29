@@ -149,6 +149,7 @@ struct ModelConfigurationView: View {
             }
             .navigationTitle("Model Configuration")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .tabBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {

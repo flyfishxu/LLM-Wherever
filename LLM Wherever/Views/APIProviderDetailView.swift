@@ -39,55 +39,30 @@ struct APIProviderDetailView: View {
                 }
                 
                 Section {
-                    ForEach(viewModel.provider.models.indices, id: \.self) { index in
-                        NavigationLink {
-                            ModelConfigurationView(
-                                model: $viewModel.provider.models[index]
-                            )
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(viewModel.provider.models[index].effectiveName)
-                                        .font(.headline)
-                                    Text(viewModel.provider.models[index].identifier)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                    
-                                    // Show configuration status
-                                    HStack {
-                                        if viewModel.provider.models[index].useCustomSettings {
-                                            Image(systemName: "gearshape.fill")
-                                                .foregroundStyle(.blue)
-                                            Text("Custom Settings")
-                                                .font(.caption2)
-                                                .foregroundStyle(.blue)
-                                        } else {
-                                            Image(systemName: "arrow.triangle.2.circlepath")
-                                                .foregroundStyle(.secondary)
-                                            Text("Using Global Defaults")
-                                                .font(.caption2)
-                                                .foregroundStyle(.secondary)
-                                        }
-                                        Spacer()
+                    ForEach(viewModel.provider.models) { model in
+                            if let modelIndex = viewModel.provider.models.firstIndex(where: { $0.id == model.id }) {
+                                NavigationLink {
+                                    ModelConfigurationView(
+                                        model: $viewModel.provider.models[modelIndex]
+                                    )
+                                } label: {
+                                    ModelRowView(model: model)
+                                }
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        viewModel.deleteModel(model)
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
                                     }
                                 }
-                                
-                                Spacer()
-                                
-                                Image(systemName: "chevron.right")
-                                    .font(.caption)
-                                    .foregroundStyle(.tertiary)
                             }
                         }
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button(role: .destructive) {
-                                viewModel.deleteModel(viewModel.provider.models[index])
-                            } label: {
-                                Label("Delete", systemImage: "trash")
+                        .onDelete { indexSet in
+                            let modelsToDelete = indexSet.map { viewModel.provider.models[$0] }
+                            for model in modelsToDelete {
+                                viewModel.deleteModel(model)
                             }
                         }
-                    }
-                    .onDelete(perform: viewModel.deleteModel)
                     
                     // Fetch models from API button
                     Button(action: {
@@ -129,13 +104,14 @@ struct APIProviderDetailView: View {
                             .foregroundStyle(.blue)
                     }
                 } header: {
-                    Text("Supported Models")
+                    Text("Supported Models (\(viewModel.provider.models.count))")
                 } footer: {
                     Text("Tap \"Fetch models from API\" to automatically get the latest available models, or manually add custom models.")
                 }
             }
             .navigationTitle(viewModel.provider.name)
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .tabBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {

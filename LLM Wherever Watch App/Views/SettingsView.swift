@@ -77,7 +77,7 @@ struct SettingsView: View {
                     }
                 }
                 
-
+                
                 Section {
                     HStack {
                         Image(systemName: connectivityManager.isConnected ? "checkmark.circle.fill" : "xmark.circle.fill")
