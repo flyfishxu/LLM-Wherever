@@ -59,18 +59,6 @@ struct ContentView: View {
                                         }
                                     }
                                 }
-                                
-                                Spacer()
-                                
-                                if !provider.apiKey.isEmpty {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(.green)
-                                        .font(.caption)
-                                }
-                                
-                                Image(systemName: "chevron.right")
-                                    .font(.caption2)
-                                    .foregroundStyle(.tertiary)
                             }
                         }
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
