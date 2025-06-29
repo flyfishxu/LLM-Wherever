@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  LLM Wherever Watch App
 //
-//  Created by 徐义超 on 2025/6/29.
+//  Created by FlyfishXu on 2025/6/29.
 //
 
 import SwiftUI
@@ -23,7 +23,11 @@ struct ContentView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 if connectivityManager.apiProviders.isEmpty || connectivityManager.selectedProvider == nil || connectivityManager.selectedModel == nil {
-                    SetupRequiredView(isConnected: connectivityManager.isConnected)
+                    SetupRequiredView(
+                        isConnected: connectivityManager.isConnected,
+                        hasAnyProviders: !connectivityManager.apiProviders.isEmpty,
+                        isSyncing: connectivityManager.isSyncing
+                    )
                 } else {
                     WatchChatView(
                         chatMessages: $chatMessages,

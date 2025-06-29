@@ -2,7 +2,7 @@
 //  WatchConnectivityManager.swift
 //  LLM Wherever
 //
-//  Created by 徐义超 on 2025/1/16.
+//  Created by FlyfishXu on 2025/1/16.
 //
 
 import Foundation
@@ -130,42 +130,95 @@ class WatchConnectivityManager: NSObject, ObservableObject {
     }
     
     func syncWithWatch() {
-        guard WCSession.default.isReachable else { return }
+        guard WCSession.default.isReachable else { 
+            print("Watch is not reachable, using background sync")
+            // Even if watch is not reachable, try to sync using application context
+            syncWithApplicationContext()
+            return 
+        }
         
+        // First try using application context (recommended approach)
+        syncWithApplicationContext()
+        
+        // If immediate notification is needed, send a simple message
+        sendSyncNotification()
+    }
+    
+    private func syncWithApplicationContext() {
         // Only sync active (enabled) providers
         let activeProviders = apiProviders.filter { $0.isActive }
         
-        var message: [String: Any] = [
-            "apiProviders": activeProviders.compactMap { provider in
-                try? JSONEncoder().encode(provider)
-            }
-        ]
+        var context: [String: Any] = [:]
+        
+        // Encode API providers
+        let providersData = activeProviders.compactMap { provider in
+            try? JSONEncoder().encode(provider)
+        }
+        
+        // Convert Data array to Base64 string array to avoid transmission issues
+        let providersBase64 = providersData.map { $0.base64EncodedString() }
+        context["apiProvidersBase64"] = providersBase64
         
         // Include selected provider and model (only if active)
         if let provider = selectedProvider,
            provider.isActive,
            let providerData = try? JSONEncoder().encode(provider) {
-            message["selectedProvider"] = providerData
+            context["selectedProviderBase64"] = providerData.base64EncodedString()
         }
         
         if let model = selectedModel,
            let modelData = try? JSONEncoder().encode(model) {
-            message["selectedModel"] = modelData
+            context["selectedModelBase64"] = modelData.base64EncodedString()
         }
         
-        WCSession.default.sendMessage(message, replyHandler: nil) { error in
-            print("Failed to send data to watch: \(error.localizedDescription)")
+        // Add timestamp to ensure update
+        context["syncTimestamp"] = Date().timeIntervalSince1970
+        
+        do {
+            try WCSession.default.updateApplicationContext(context)
+            print("Successfully updated application context: \(activeProviders.count) active API providers")
+        } catch {
+            print("Failed to update application context: \(error.localizedDescription)")
+            // Retry logic can be added here
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                self.retrySyncWithWatch()
+            }
         }
+    }
+    
+    private func sendSyncNotification() {
+        // Send a small notification message telling watch to check application context
+        let notification = ["action": "syncCheck", "timestamp": Date().timeIntervalSince1970] as [String : Any]
+        
+        WCSession.default.sendMessage(notification, replyHandler: { response in
+            print("Watch successfully received sync notification and completed processing")
+        }) { error in
+            let nsError = error as NSError
+            if nsError.code == 7004 { // WCErrorCodeDeliveryFailed
+                print("Sync notification delivery failed, but application context will sync in background")
+            } else {
+                print("Failed to send sync notification: \(error.localizedDescription) (Code: \(nsError.code))")
+            }
+            // This failure is not critical because application context will sync in background
+        }
+    }
+    
+    private func retrySyncWithWatch() {
+        print("Retrying sync data to watch...")
+        syncWithApplicationContext()
     }
 }
 
 extension WatchConnectivityManager: WCSessionDelegate {
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
-        if let error = error {
-            print("WCSession activation failed: \(error.localizedDescription)")
-        } else {
-            print("WCSession activation successful")
-            syncWithWatch()
+        DispatchQueue.main.async {
+            if let error = error {
+                print("WCSession activation failed: \(error.localizedDescription)")
+            } else {
+                print("WCSession activation successful")
+                // Immediately sync data to watch after session activation
+                self.syncWithWatch()
+            }
         }
     }
     
@@ -176,4 +229,13 @@ extension WatchConnectivityManager: WCSessionDelegate {
     
     func sessionDidBecomeInactive(_ session: WCSession) {}
     func sessionDidDeactivate(_ session: WCSession) {}
+    
+    func sessionReachabilityDidChange(_ session: WCSession) {
+        DispatchQueue.main.async {
+            if session.isReachable {
+                print("Watch became reachable, syncing data...")
+                self.syncWithWatch()
+            }
+        }
+    }
 } 

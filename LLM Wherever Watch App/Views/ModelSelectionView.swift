@@ -2,7 +2,7 @@
 //  ModelSelectionView.swift
 //  LLM Wherever Watch App
 //
-//  Created by AI Assistant on 2025/6/29.
+//  Created by FlyfishXu on 2025/6/29.
 //
 
 import SwiftUI
