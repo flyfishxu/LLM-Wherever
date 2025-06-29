@@ -14,6 +14,7 @@ struct WatchChatView: View {
     @Binding var errorMessage: String?
     
     @FocusState private var isTextFieldFocused: Bool
+    @State private var scrollID = UUID() // For triggering scroll updates
     
     let onSendMessage: (String) -> Void
     
@@ -23,19 +24,34 @@ struct WatchChatView: View {
                 ScrollView {
                     LazyVStack(spacing: 4) {
                         ForEach(chatMessages) { message in
-                            WatchChatBubbleView(message: message)
-                        }
-                        
-                        if isLoading {
-                            loadingView
+                            WatchChatBubbleView(
+                                message: message,
+                                isLoading: isLoading && message == chatMessages.last && message.role == .assistant && message.content.isEmpty
+                            )
+                            .id(message.id)
                         }
                         
                         inputSection
                     }
                     .padding(.horizontal, 6)
                     .padding(.top, 2)
+                    .id(scrollID) // Add ID for scroll tracking
                 }
                 .onChange(of: chatMessages.count) { _, _ in
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        if let lastMessage = chatMessages.last {
+                            proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                        }
+                    }
+                }
+                .onChange(of: chatMessages.last?.content) { _, _ in
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        if let lastMessage = chatMessages.last {
+                            proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                        }
+                    }
+                }
+                .onChange(of: isLoading) { _, _ in
                     withAnimation(.easeOut(duration: 0.3)) {
                         if let lastMessage = chatMessages.last {
                             proxy.scrollTo(lastMessage.id, anchor: .bottom)
@@ -55,16 +71,7 @@ struct WatchChatView: View {
         }
     }
     
-    private var loadingView: some View {
-        HStack(spacing: 4) {
-            ProgressView()
-                .controlSize(.mini)
-            Text("AI thinking")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-        }
-        .padding(.vertical, 4)
-    }
+
     
     private var inputSection: some View {
         VStack(spacing: 12) {
@@ -84,11 +91,9 @@ struct WatchChatView: View {
                     inputText = ""
                 }
                 .padding(.horizontal, 10)
-                .padding(.vertical, 4)
+                .padding(.bottom, 6)
                 .clipShape(RoundedRectangle(cornerRadius: 24))
-            
-            Spacer()
-                .frame(height: 4)
+        
         }
     }
 }

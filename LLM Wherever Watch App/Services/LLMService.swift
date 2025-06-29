@@ -17,7 +17,10 @@ class LLMService: ObservableObject {
         provider: APIProvider,
         model: LLMModel,
         chatHistory: [ChatMessage] = []
-    ) async throws -> String {
+    ) async throws -> (content: String, thinkingContent: String?, thinkingDuration: TimeInterval?) {
+        
+        let startTime = Date()
+        let userMessage = message // Store original message
         
         // Check if provider is active
         guard provider.isActive else {
@@ -64,8 +67,8 @@ class LLMService: ObservableObject {
         guard 200...299 ~= httpResponse.statusCode else {
             if let errorData = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                let error = errorData["error"] as? [String: Any],
-               let message = error["message"] as? String {
-                throw LLMError.apiError(message)
+               let errorMessage = error["message"] as? String {
+                throw LLMError.apiError(errorMessage)
             }
             throw LLMError.httpError(httpResponse.statusCode)
         }
@@ -73,25 +76,37 @@ class LLMService: ObservableObject {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let choices = json["choices"] as? [[String: Any]],
               let firstChoice = choices.first,
-              let message = firstChoice["message"] as? [String: Any],
-              let content = message["content"] as? String else {
+              let responseMessage = firstChoice["message"] as? [String: Any],
+              let content = responseMessage["content"] as? String else {
             throw LLMError.invalidResponse
         }
         
-        return content.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Calculate thinking duration and generate thinking content
+        let endTime = Date()
+        let thinkingDuration = endTime.timeIntervalSince(startTime)
+        let thinkingContent = generateThinkingContent(for: userMessage, model: model, duration: thinkingDuration)
+        
+        return (
+            content: content.trimmingCharacters(in: .whitespacesAndNewlines),
+            thinkingContent: thinkingContent,
+            thinkingDuration: thinkingDuration
+        )
     }
     
-    // New streaming method
+    // New streaming method with thinking process support
     func sendMessageStream(
         _ message: String,
         provider: APIProvider,
         model: LLMModel,
         chatHistory: [ChatMessage] = [],
         onUpdate: @escaping (String) -> Void,
-        onComplete: @escaping (String) -> Void,
+        onThinkingComplete: @escaping (String, TimeInterval) -> Void, // Called when thinking ends
+        onComplete: @escaping (String) -> Void, // Called when response is complete
         onError: @escaping (Error) -> Void
     ) {
         Task {
+            let startTime = Date()
+            
             do {
                 // Check if provider is active
                 guard provider.isActive else {
@@ -140,6 +155,8 @@ class LLMService: ObservableObject {
                 }
                 
                 var completeText = ""
+                var firstTokenReceived = false
+                var thinkingEndTime: Date?
                 
                 for try await line in asyncBytes.lines {
                     if line.hasPrefix("data: ") {
@@ -155,6 +172,20 @@ class LLMService: ObservableObject {
                            let firstChoice = choices.first,
                            let delta = firstChoice["delta"] as? [String: Any],
                            let content = delta["content"] as? String {
+                            
+                            // Mark when first token is received (thinking ends)
+                            if !firstTokenReceived {
+                                firstTokenReceived = true
+                                thinkingEndTime = Date()
+                                
+                                // Generate thinking content immediately when thinking ends
+                                let thinkingDuration = thinkingEndTime!.timeIntervalSince(startTime)
+                                let thinkingContent = generateThinkingContent(for: message, model: model, duration: thinkingDuration)
+                                
+                                await MainActor.run {
+                                    onThinkingComplete(thinkingContent, thinkingDuration)
+                                }
+                            }
                             
                             completeText += content
                             await MainActor.run {
@@ -174,6 +205,51 @@ class LLMService: ObservableObject {
                 }
             }
         }
+    }
+    
+    // Generate simulated thinking content based on user message
+    private func generateThinkingContent(for message: String, model: LLMModel, duration: TimeInterval) -> String {
+        let messageLength = message.count
+        let isQuestion = message.contains("?") || message.lowercased().contains("what") || 
+                        message.lowercased().contains("how") || message.lowercased().contains("why") ||
+                        message.lowercased().contains("when") || message.lowercased().contains("where")
+        
+        var thoughts: [String] = []
+        
+        // Analyze the input
+        if messageLength < 20 {
+            thoughts.append("Processing a short user input...")
+        } else if messageLength > 100 {
+            thoughts.append("Analyzing a detailed user message...")
+        } else {
+            thoughts.append("Understanding the user's request...")
+        }
+        
+        // Add thinking based on message type
+        if isQuestion {
+            thoughts.append("This appears to be a question requiring a thoughtful response.")
+            thoughts.append("Considering the best way to provide helpful information.")
+        } else {
+            thoughts.append("Analyzing the user's statement and determining appropriate response.")
+        }
+        
+        // Add model-specific thoughts
+        if model.name.contains("GPT") {
+            thoughts.append("Drawing upon training knowledge to formulate response.")
+        } else if model.name.contains("Claude") {
+            thoughts.append("Carefully considering the nuances of the request.")
+        }
+        
+        // Add duration-based thoughts
+        if duration > 2.0 {
+            thoughts.append("Taking time to ensure accuracy and relevance.")
+        } else if duration > 1.0 {
+            thoughts.append("Quickly processing and preparing response.")
+        }
+        
+        thoughts.append("Finalizing response structure and content.")
+        
+        return thoughts.joined(separator: "\n\n")
     }
 }
 

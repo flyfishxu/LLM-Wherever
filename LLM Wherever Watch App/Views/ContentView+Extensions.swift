@@ -64,15 +64,24 @@ extension ContentView {
             model: model,
             chatHistory: Array(chatMessages.dropLast(2).suffix(5)) // Exclude just added user message and empty AI message
         ) { partialContent in
-            // Real-time update
+            // Real-time update during streaming
             if let messageId = self.streamingMessageId,
                let index = self.chatMessages.firstIndex(where: { $0.id == messageId }) {
                 var updatedMessage = self.chatMessages[index]
                 updatedMessage.content = partialContent
                 self.chatMessages[index] = updatedMessage
             }
+        } onThinkingComplete: { thinkingContent, thinkingDuration in
+            // Called when thinking ends (first token received)
+            if let messageId = self.streamingMessageId,
+               let index = self.chatMessages.firstIndex(where: { $0.id == messageId }) {
+                var updatedMessage = self.chatMessages[index]
+                updatedMessage.thinkingContent = thinkingContent
+                updatedMessage.thinkingDuration = thinkingDuration
+                self.chatMessages[index] = updatedMessage
+            }
         } onComplete: { finalContent in
-            // Complete
+            // Complete response
             if let messageId = self.streamingMessageId,
                let index = self.chatMessages.firstIndex(where: { $0.id == messageId }) {
                 var updatedMessage = self.chatMessages[index]

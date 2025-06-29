@@ -58,4 +58,9 @@ struct ChatMessage: Identifiable, Codable, Equatable {
     var content: String
     var timestamp = Date()
     var modelInfo: String? // Store model info, only AI messages have this
+    
+    // Thinking process related fields
+    var thinkingContent: String? // The thinking process content
+    var thinkingDuration: TimeInterval? // How long the thinking took in seconds
+    var isThinkingCollapsed: Bool = true // Whether thinking section is collapsed
 } 
