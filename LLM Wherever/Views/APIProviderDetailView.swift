@@ -37,6 +37,20 @@ struct APIProviderDetailView: View {
                 }
                 
                 Section {
+                    VStack(alignment: .leading) {
+                        Text("System Prompt")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        TextField("Enter system prompt...", text: $provider.systemPrompt, axis: .vertical)
+                            .lineLimit(3...6)
+                    }
+                } header: {
+                    Text("AI Assistant Settings")
+                } footer: {
+                    Text("The system prompt will be shown as the first message when starting a conversation on Apple Watch.")
+                }
+                
+                Section {
                     Toggle("Enable", isOn: $provider.isActive)
                 } header: {
                     Text("Status")

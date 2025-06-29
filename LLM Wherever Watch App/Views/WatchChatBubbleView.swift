@@ -10,6 +10,28 @@ import SwiftUI
 struct WatchChatBubbleView: View {
     let message: ChatMessage
     
+    var isSystemMessage: Bool {
+        message.role == .assistant && message.modelInfo?.contains("System") == true
+    }
+    
+    var backgroundColor: Color {
+        if message.role == .user {
+            return .blue
+        } else if isSystemMessage {
+            return .green.opacity(0.2)
+        } else {
+            return .gray.opacity(0.15)
+        }
+    }
+    
+    var textColor: Color {
+        if message.role == .user {
+            return .white
+        } else {
+            return .primary
+        }
+    }
+    
     var body: some View {
         HStack(alignment: .bottom, spacing: 4) {
             if message.role == .user {
@@ -33,9 +55,9 @@ struct WatchChatBubbleView: View {
                     .padding(.vertical, 6)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(message.role == .user ? .blue : .gray.opacity(0.15))
+                            .fill(backgroundColor)
                     )
-                    .foregroundStyle(message.role == .user ? .white : .primary)
+                    .foregroundStyle(textColor)
                 
                 Text(message.timestamp, style: .time)
                     .font(.system(size: 9))

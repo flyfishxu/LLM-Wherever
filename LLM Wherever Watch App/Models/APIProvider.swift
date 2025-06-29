@@ -14,6 +14,7 @@ struct APIProvider: Identifiable, Codable, Equatable {
     var apiKey: String
     var models: [LLMModel]
     var isActive: Bool = true
+    var systemPrompt: String = "Hello, how can I help you"
 }
 
 extension APIProvider {
@@ -24,7 +25,8 @@ extension APIProvider {
         models: [
             LLMModel(name: "GPT-4", identifier: "gpt-4"),
             LLMModel(name: "GPT-3.5 Turbo", identifier: "gpt-3.5-turbo")
-        ]
+        ],
+        systemPrompt: "Hello, how can I help you"
     )
     
     static let anthropic = APIProvider(
@@ -34,7 +36,8 @@ extension APIProvider {
         models: [
             LLMModel(name: "Claude 3.5 Sonnet", identifier: "claude-3-5-sonnet-20241022"),
             LLMModel(name: "Claude 3 Haiku", identifier: "claude-3-haiku-20240307")
-        ]
+        ],
+        systemPrompt: "Hello, how can I help you"
     )
 }
 

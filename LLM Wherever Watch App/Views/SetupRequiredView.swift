@@ -20,7 +20,7 @@ struct SetupRequiredView: View {
                 .font(.subheadline)
                 .fontWeight(.medium)
             
-            Text("Please configure API on iPhone")
+            Text("Please configure API and select default model on iPhone")
                 .font(.caption)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)

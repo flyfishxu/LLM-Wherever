@@ -10,6 +10,27 @@ import WatchKit
 
 // MARK: - Message Handling
 extension ContentView {
+    func initializeChatWithSystemPrompt() {
+        // Only add system prompt if chat is empty
+        guard chatMessages.isEmpty,
+              let provider = connectivityManager.selectedProvider else { return }
+        
+        let modelName = connectivityManager.selectedModel?.name ?? "AI Assistant"
+        let systemMessage = ChatMessage(
+            role: .assistant, 
+            content: provider.systemPrompt,
+            modelInfo: "\(modelName) - System"
+        )
+        chatMessages.append(systemMessage)
+    }
+    
+    func resetChatWithNewSystemPrompt() {
+        // Clear existing chat messages
+        chatMessages.removeAll()
+        // Initialize with new system prompt
+        initializeChatWithSystemPrompt()
+    }
+    
     func sendTextMessage(_ text: String) {
         let messageText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !messageText.isEmpty else { return }

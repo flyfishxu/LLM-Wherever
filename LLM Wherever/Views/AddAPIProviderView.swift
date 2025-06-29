@@ -12,6 +12,7 @@ struct AddAPIProviderView: View {
     @State private var customName = ""
     @State private var customBaseURL = ""
     @State private var apiKey = ""
+    @State private var systemPrompt = "Hello, how can I help you"
     @State private var isCustomProvider = false
     @State private var fetchedModels: [LLMModel] = []
     @State private var isFetchingModels = false
@@ -179,6 +180,14 @@ struct AddAPIProviderView: View {
                             }
                         }
                         
+                        VStack(alignment: .leading) {
+                            Text("System Prompt")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            TextField("Enter system prompt...", text: $systemPrompt, axis: .vertical)
+                                .lineLimit(3...6)
+                        }
+                        
                         // Fetch status and action buttons
                         if !apiKey.isEmpty && !customName.isEmpty && !customBaseURL.isEmpty {
                             VStack(spacing: 8) {
@@ -293,9 +302,9 @@ struct AddAPIProviderView: View {
                         Text("Configuration")
                     } footer: {
                         if selectedTemplate == .custom {
-                            Text("Enter the configuration information for your custom API provider. The API Key will be stored securely.")
+                            Text("Enter the configuration information for your custom API provider. The API Key will be stored securely. The system prompt will be shown as the first message when starting a conversation on Apple Watch.")
                         } else {
-                            Text("Enter your API Key. Tap the button to test connection and automatically fetch available models.")
+                            Text("Enter your API Key and customize the system prompt. Tap the button to test connection and automatically fetch available models. The system prompt will be shown as the first message when starting a conversation on Apple Watch.")
                         }
                     }
                 }
@@ -337,7 +346,8 @@ struct AddAPIProviderView: View {
             baseURL: customBaseURL,
             apiKey: apiKey,
             models: models,
-            isActive: true
+            isActive: true,
+            systemPrompt: systemPrompt
         )
         
         connectivityManager.addAPIProvider(provider)

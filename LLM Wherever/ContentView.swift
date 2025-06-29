@@ -35,6 +35,57 @@ struct ContentView: View {
                 }
                 
                 Section {
+                    if !connectivityManager.apiProviders.isEmpty {
+                        VStack(spacing: 16) {
+                            HStack {
+                                Picker("Default Provider", selection: Binding(
+                                    get: { connectivityManager.selectedProvider?.id ?? UUID() },
+                                    set: { newValue in
+                                        if let provider = connectivityManager.apiProviders.first(where: { $0.id == newValue }) {
+                                            connectivityManager.selectProvider(provider)
+                                        }
+                                    }
+                                )) {
+                                    ForEach(connectivityManager.apiProviders.filter(\.isActive)) { provider in
+                                        Text(provider.name.truncated(to: 15)).tag(provider.id)
+                                    }
+                                }
+                                .pickerStyle(.menu)
+                                .disabled(connectivityManager.apiProviders.filter(\.isActive).isEmpty)
+                            }
+                            
+                            if let provider = connectivityManager.selectedProvider, !provider.models.isEmpty {
+                                HStack {
+                                    Picker("Default Model", selection: Binding(
+                                        get: { connectivityManager.selectedModel?.id ?? UUID() },
+                                        set: { newValue in
+                                            if let model = provider.models.first(where: { $0.id == newValue }) {
+                                                connectivityManager.selectModel(model)
+                                            }
+                                        }
+                                    )) {
+                                        ForEach(provider.models) { model in
+                                            Text(model.name.truncated(to: 20)).tag(model.id)
+                                        }
+                                    }
+                                    .pickerStyle(.menu)
+                                }
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    } else {
+                        Text("No API providers configured")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .padding(.vertical, 8)
+                    }
+                } header: {
+                    Text("Default Settings")
+                } footer: {
+                    Text("Set the default AI provider and model that will be used on Apple Watch. These settings will sync automatically.")
+                }
+                
+                Section {
                     ForEach(connectivityManager.apiProviders) { provider in
                         NavigationLink(destination: APIProviderDetailView(provider: provider)) {
                             HStack {
@@ -43,7 +94,7 @@ struct ContentView: View {
                                     .frame(width: 8, height: 8)
                                 
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(provider.name)
+                                    Text(provider.name.truncated(to: 15))
                                         .font(.headline)
                                     HStack(spacing: 4) {
                                         if refreshingProviders.contains(provider.id) {
@@ -131,4 +182,14 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+}
+
+extension String {
+    func truncated(to length: Int) -> String {
+        if self.count <= length {
+            return self
+        } else {
+            return String(self.prefix(length)) + "..."
+        }
+    }
 }

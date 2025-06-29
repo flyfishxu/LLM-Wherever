@@ -77,19 +77,27 @@ extension WatchConnectivityManager: WCSessionDelegate {
     
     func session(_ session: WCSession, didReceiveMessage message: [String : Any]) {
         DispatchQueue.main.async {
+            // Update API providers
             if let providersData = message["apiProviders"] as? [Data] {
                 self.apiProviders = providersData.compactMap { data in
                     try? JSONDecoder().decode(APIProvider.self, from: data)
                 }
-                
-                // If previously selected provider is not in the new list, reselect
-                if let selectedProvider = self.selectedProvider,
-                   !self.apiProviders.contains(where: { $0.id == selectedProvider.id }) {
-                    self.selectedProvider = self.apiProviders.first
-                    self.selectedModel = self.selectedProvider?.models.first
-                    self.saveSelections()
-                }
             }
+            
+            // Update selected provider
+            if let providerData = message["selectedProvider"] as? Data,
+               let provider = try? JSONDecoder().decode(APIProvider.self, from: providerData) {
+                self.selectedProvider = provider
+            }
+            
+            // Update selected model
+            if let modelData = message["selectedModel"] as? Data,
+               let model = try? JSONDecoder().decode(LLMModel.self, from: modelData) {
+                self.selectedModel = model
+            }
+            
+            // Save the received selections
+            self.saveSelections()
         }
     }
 } 

@@ -22,15 +22,8 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                if connectivityManager.apiProviders.isEmpty {
+                if connectivityManager.apiProviders.isEmpty || connectivityManager.selectedProvider == nil || connectivityManager.selectedModel == nil {
                     SetupRequiredView(isConnected: connectivityManager.isConnected)
-                } else if connectivityManager.selectedProvider == nil || connectivityManager.selectedModel == nil {
-                    ModelSelectionView(
-                        apiProviders: connectivityManager.apiProviders,
-                        onProviderSelected: { provider in
-                            connectivityManager.selectProvider(provider)
-                        }
-                    )
                 } else {
                     WatchChatView(
                         chatMessages: $chatMessages,
@@ -39,6 +32,15 @@ struct ContentView: View {
                         errorMessage: $errorMessage,
                         onSendMessage: sendTextMessage
                     )
+                    .onAppear {
+                        initializeChatWithSystemPrompt()
+                    }
+                    .onChange(of: connectivityManager.selectedProvider?.id) { _, _ in
+                        resetChatWithNewSystemPrompt()
+                    }
+                    .onChange(of: connectivityManager.selectedModel?.id) { _, _ in
+                        resetChatWithNewSystemPrompt()
+                    }
                 }
             }
             .toolbar {
