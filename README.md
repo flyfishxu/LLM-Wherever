@@ -21,6 +21,26 @@ A LLM client application designed specifically for Apple Watch, allowing you to 
 - **Quick Response**: Optimized network requests and error handling
 - **Local Storage**: Chat history securely stored locally on the watch
 
+## Screenshots
+
+### 📱 iPhone App
+<div align="center">
+
+| Home | Provider Details | Settings |
+|:---:|:---:|:---:|
+| ![iOS Home](images/iOS-Home.png) | ![iOS Provider Details](images/iOS-ProviderDetails.png) | ![iOS Settings](images/iOS-Settings.png) |
+
+</div>
+
+### ⌚ Apple Watch App
+<div align="center">
+
+| Chat Interface | Chat History |
+|:---:|:---:|
+| ![watchOS Chat 1](images/watchOS-Chat1.png) | ![watchOS Chat 2](images/watchOS-Chat2.png) |
+
+</div>
+
 ## Supported API Providers
 
 - **OpenAI**: GPT-4, GPT-4o, GPT-3.5 Turbo
