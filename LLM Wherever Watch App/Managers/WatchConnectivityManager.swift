@@ -102,11 +102,17 @@ class WatchConnectivityManager: NSObject, ObservableObject {
         if let provider = selectedProvider,
            let providerData = try? JSONEncoder().encode(provider) {
             UserDefaults.standard.set(providerData, forKey: "selectedProvider")
+        } else {
+            // Clear saved selection if no provider is selected
+            UserDefaults.standard.removeObject(forKey: "selectedProvider")
         }
         
         if let model = selectedModel,
            let modelData = try? JSONEncoder().encode(model) {
             UserDefaults.standard.set(modelData, forKey: "selectedModel")
+        } else {
+            // Clear saved selection if no model is selected
+            UserDefaults.standard.removeObject(forKey: "selectedModel")
         }
     }
     
@@ -135,13 +141,32 @@ class WatchConnectivityManager: NSObject, ObservableObject {
         self.apiProviders = providers
         saveAPIProviders()
         
-        // Update selected provider and model
-        if let provider = selectedProvider, provider.isActive {
-            self.selectedProvider = provider
-        }
-        
-        if let model = selectedModel {
-            self.selectedModel = model
+        // Handle provider and model selection based on received data and available providers
+        if providers.isEmpty {
+            // All providers were deleted - clear selections
+            self.selectedProvider = nil
+            self.selectedModel = nil
+            print("All API providers deleted - cleared selections")
+        } else {
+            // Update selected provider and model if valid
+            if let provider = selectedProvider, 
+               provider.isActive,
+               providers.contains(where: { $0.id == provider.id }) {
+                self.selectedProvider = provider
+            } else {
+                // Selected provider not available, auto-select first active provider
+                self.selectedProvider = providers.first(where: { $0.isActive }) ?? providers.first
+            }
+            
+            // Update selected model
+            if let model = selectedModel,
+               let currentProvider = self.selectedProvider,
+               currentProvider.models.contains(where: { $0.id == model.id }) {
+                self.selectedModel = model
+            } else {
+                // Selected model not available, auto-select first model of current provider
+                self.selectedModel = self.selectedProvider?.models.first
+            }
         }
         
         // Save updated selections
@@ -247,17 +272,18 @@ extension WatchConnectivityManager: WCSessionDelegate {
             receivedSelectedModel = model
         }
         
-        // Sync data to local storage
+        // Sync data to local storage - always sync, even if providers list is empty
+        // This ensures deletions are properly reflected on the watch
+        self.syncLocalData(
+            providers: receivedProviders,
+            selectedProvider: receivedSelectedProvider,
+            selectedModel: receivedSelectedModel
+        )
+        
         if !receivedProviders.isEmpty {
-            self.syncLocalData(
-                providers: receivedProviders,
-                selectedProvider: receivedSelectedProvider,
-                selectedModel: receivedSelectedModel
-            )
-            
             print("Successfully synced \(receivedProviders.count) API providers from application context")
         } else {
-            print("No valid API provider data found in application context")
+            print("Synced empty API providers list (all providers deleted)")
         }
         
         self.isSyncing = false
@@ -291,14 +317,13 @@ extension WatchConnectivityManager: WCSessionDelegate {
             receivedSelectedModel = model
         }
         
-        // Sync data to local storage
-        if !receivedProviders.isEmpty {
-            self.syncLocalData(
-                providers: receivedProviders,
-                selectedProvider: receivedSelectedProvider,
-                selectedModel: receivedSelectedModel
-            )
-        }
+        // Sync data to local storage - always sync, even if providers list is empty
+        // This ensures deletions are properly reflected on the watch
+        self.syncLocalData(
+            providers: receivedProviders,
+            selectedProvider: receivedSelectedProvider,
+            selectedModel: receivedSelectedModel
+        )
         
         self.isSyncing = false
     }

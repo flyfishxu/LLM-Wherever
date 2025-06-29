@@ -55,10 +55,16 @@ class WatchConnectivityManager: NSObject, ObservableObject {
     func deleteAPIProvider(_ provider: APIProvider) {
         apiProviders.removeAll { $0.id == provider.id }
         
-        // If we're deleting the selected provider, select a new one
+        // If we're deleting the selected provider, select a new one or clear selection if no providers left
         if selectedProvider?.id == provider.id {
-            selectedProvider = apiProviders.first
-            selectedModel = selectedProvider?.models.first
+            if !apiProviders.isEmpty {
+                selectedProvider = apiProviders.first
+                selectedModel = selectedProvider?.models.first
+            } else {
+                // No providers left - clear selections
+                selectedProvider = nil
+                selectedModel = nil
+            }
             saveSelections()
         }
         
@@ -109,11 +115,17 @@ class WatchConnectivityManager: NSObject, ObservableObject {
         if let provider = selectedProvider,
            let providerData = try? JSONEncoder().encode(provider) {
             UserDefaults.standard.set(providerData, forKey: "selectedProvider")
+        } else {
+            // Clear saved selection if no provider is selected
+            UserDefaults.standard.removeObject(forKey: "selectedProvider")
         }
         
         if let model = selectedModel,
            let modelData = try? JSONEncoder().encode(model) {
             UserDefaults.standard.set(modelData, forKey: "selectedModel")
+        } else {
+            // Clear saved selection if no model is selected
+            UserDefaults.standard.removeObject(forKey: "selectedModel")
         }
     }
     
@@ -159,14 +171,17 @@ class WatchConnectivityManager: NSObject, ObservableObject {
         let providersBase64 = providersData.map { $0.base64EncodedString() }
         context["apiProvidersBase64"] = providersBase64
         
-        // Include selected provider and model (only if active)
+        // Include selected provider and model (only if active and exists in current providers)
         if let provider = selectedProvider,
            provider.isActive,
+           activeProviders.contains(where: { $0.id == provider.id }),
            let providerData = try? JSONEncoder().encode(provider) {
             context["selectedProviderBase64"] = providerData.base64EncodedString()
         }
         
         if let model = selectedModel,
+           let provider = selectedProvider,
+           provider.models.contains(where: { $0.id == model.id }),
            let modelData = try? JSONEncoder().encode(model) {
             context["selectedModelBase64"] = modelData.base64EncodedString()
         }
@@ -176,7 +191,10 @@ class WatchConnectivityManager: NSObject, ObservableObject {
         
         do {
             try WCSession.default.updateApplicationContext(context)
-            print("Successfully updated application context: \(activeProviders.count) active API providers")
+            print("Successfully updated application context: \(activeProviders.count) active API providers (total: \(apiProviders.count))")
+            if activeProviders.isEmpty {
+                print("Sent empty providers list to watch (all providers deleted or inactive)")
+            }
         } catch {
             print("Failed to update application context: \(error.localizedDescription)")
             // Retry logic can be added here
