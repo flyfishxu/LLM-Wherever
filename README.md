@@ -35,9 +35,9 @@ A LLM client application designed specifically for Apple Watch, allowing you to 
 ### ⌚ Apple Watch App
 <div align="center">
 
-| Chat Interface | Chat History |
-|:---:|:---:|
-| ![watchOS Chat 1](images/watchOS-Chat1.png) | ![watchOS Chat 2](images/watchOS-Chat2.png) |
+| Chat Interface | Chat History | Choose Model |
+|:---:|:---:|:---:|
+| ![watchOS Chat 1](images/watchOS-Chat1.png) | ![watchOS Chat 2](images/watchOS-Chat2.png) | ![watchOS Choose Model](images/watchOS-ChooseModel.png) |
 
 </div>
 
