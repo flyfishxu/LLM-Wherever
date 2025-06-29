@@ -77,16 +77,17 @@ extension WatchConnectivityManager: WCSessionDelegate {
     
     func session(_ session: WCSession, didReceiveMessage message: [String : Any]) {
         DispatchQueue.main.async {
-            // Update API providers
+            // Update API providers (only active ones should be received)
             if let providersData = message["apiProviders"] as? [Data] {
                 self.apiProviders = providersData.compactMap { data in
                     try? JSONDecoder().decode(APIProvider.self, from: data)
-                }
+                }.filter { $0.isActive } // Double check that only active providers are kept
             }
             
-            // Update selected provider
+            // Update selected provider (only if active)
             if let providerData = message["selectedProvider"] as? Data,
-               let provider = try? JSONDecoder().decode(APIProvider.self, from: providerData) {
+               let provider = try? JSONDecoder().decode(APIProvider.self, from: providerData),
+               provider.isActive {
                 self.selectedProvider = provider
             }
             

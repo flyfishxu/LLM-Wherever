@@ -132,14 +132,18 @@ class WatchConnectivityManager: NSObject, ObservableObject {
     func syncWithWatch() {
         guard WCSession.default.isReachable else { return }
         
+        // Only sync active (enabled) providers
+        let activeProviders = apiProviders.filter { $0.isActive }
+        
         var message: [String: Any] = [
-            "apiProviders": apiProviders.compactMap { provider in
+            "apiProviders": activeProviders.compactMap { provider in
                 try? JSONEncoder().encode(provider)
             }
         ]
         
-        // Include selected provider and model
+        // Include selected provider and model (only if active)
         if let provider = selectedProvider,
+           provider.isActive,
            let providerData = try? JSONEncoder().encode(provider) {
             message["selectedProvider"] = providerData
         }

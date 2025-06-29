@@ -19,6 +19,11 @@ class LLMService: ObservableObject {
         chatHistory: [ChatMessage] = []
     ) async throws -> String {
         
+        // Check if provider is active
+        guard provider.isActive else {
+            throw LLMError.providerDisabled
+        }
+        
         let url = URL(string: "\(provider.baseURL)/chat/completions")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -88,6 +93,13 @@ class LLMService: ObservableObject {
     ) {
         Task {
             do {
+                // Check if provider is active
+                guard provider.isActive else {
+                    await MainActor.run {
+                        onError(LLMError.providerDisabled)
+                    }
+                    return
+                }
                 let url = URL(string: "\(provider.baseURL)/chat/completions")!
                 var request = URLRequest(url: url)
                 request.httpMethod = "POST"
@@ -170,6 +182,7 @@ enum LLMError: LocalizedError {
     case apiError(String)
     case httpError(Int)
     case networkError
+    case providerDisabled
     
     var errorDescription: String? {
         switch self {
@@ -181,6 +194,8 @@ enum LLMError: LocalizedError {
             return "HTTP error: \(code)"
         case .networkError:
             return "Network connection error"
+        case .providerDisabled:
+            return "This API provider has been disabled"
         }
     }
 } 

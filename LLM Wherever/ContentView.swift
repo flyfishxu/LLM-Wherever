@@ -38,7 +38,7 @@ struct ContentView: View {
                     if !connectivityManager.apiProviders.isEmpty {
                         VStack(spacing: 16) {
                             HStack {
-                                Picker("Default Provider", selection: Binding(
+                                Picker("Provider", selection: Binding(
                                     get: { connectivityManager.selectedProvider?.id ?? UUID() },
                                     set: { newValue in
                                         if let provider = connectivityManager.apiProviders.first(where: { $0.id == newValue }) {
@@ -50,13 +50,13 @@ struct ContentView: View {
                                         Text(provider.name.truncated(to: 15)).tag(provider.id)
                                     }
                                 }
-                                .pickerStyle(.menu)
+                                .pickerStyle(.automatic)
                                 .disabled(connectivityManager.apiProviders.filter(\.isActive).isEmpty)
                             }
                             
                             if let provider = connectivityManager.selectedProvider, !provider.models.isEmpty {
                                 HStack {
-                                    Picker("Default Model", selection: Binding(
+                                    Picker("Model", selection: Binding(
                                         get: { connectivityManager.selectedModel?.id ?? UUID() },
                                         set: { newValue in
                                             if let model = provider.models.first(where: { $0.id == newValue }) {
@@ -65,10 +65,10 @@ struct ContentView: View {
                                         }
                                     )) {
                                         ForEach(provider.models) { model in
-                                            Text(model.name.truncated(to: 20)).tag(model.id)
+                                            Text(model.name).tag(model.id)
                                         }
                                     }
-                                    .pickerStyle(.menu)
+                                    .pickerStyle(.automatic)
                                 }
                             }
                         }
