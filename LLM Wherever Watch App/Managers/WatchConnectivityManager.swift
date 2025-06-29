@@ -49,6 +49,37 @@ class WatchConnectivityManager: NSObject, ObservableObject {
         saveSelections()
     }
     
+    func updateProviderParameters(_ updatedProvider: APIProvider) {
+        // Update the provider in the local array
+        if let index = apiProviders.firstIndex(where: { $0.id == updatedProvider.id }) {
+            apiProviders[index] = updatedProvider
+            saveAPIProviders()
+        }
+        
+        // Update selected provider if it's the same one
+        if selectedProvider?.id == updatedProvider.id {
+            selectedProvider = updatedProvider
+            saveSelections()
+        }
+        
+        // Send update to iPhone
+        sendProviderParametersToPhone(updatedProvider)
+    }
+    
+    private func sendProviderParametersToPhone(_ provider: APIProvider) {
+        guard WCSession.default.isReachable,
+              let providerData = try? JSONEncoder().encode(provider) else { return }
+        
+        let message: [String: Any] = [
+            "action": "updateProviderParameters",
+            "providerData": providerData
+        ]
+        
+        WCSession.default.sendMessage(message, replyHandler: nil) { error in
+            print("Failed to send provider parameters update: \(error.localizedDescription)")
+        }
+    }
+    
     // Save API providers to local storage
     private func saveAPIProviders() {
         if let encoded = try? JSONEncoder().encode(apiProviders) {

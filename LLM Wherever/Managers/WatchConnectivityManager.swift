@@ -223,8 +223,19 @@ extension WatchConnectivityManager: WCSessionDelegate {
     }
     
     func session(_ session: WCSession, didReceiveMessage message: [String : Any]) {
-        // Handle messages from watch
-        print("Received message from watch: \(message)")
+        DispatchQueue.main.async {
+            // Handle parameter updates from watch
+            if let action = message["action"] as? String, action == "updateProviderParameters",
+               let providerData = message["providerData"] as? Data,
+               let updatedProvider = try? JSONDecoder().decode(APIProvider.self, from: providerData) {
+                
+                print("Received provider parameters update from watch for: \(updatedProvider.name)")
+                self.updateAPIProvider(updatedProvider)
+                return
+            }
+            
+            print("Received message from watch: \(message)")
+        }
     }
     
     func sessionDidBecomeInactive(_ session: WCSession) {}

@@ -51,8 +51,8 @@ class LLMService: ObservableObject {
         let requestBody: [String: Any] = [
             "model": model.identifier,
             "messages": messages,
-            "max_tokens": 500, // Limit fewer tokens on watch
-            "temperature": 0.7
+            "max_tokens": min(provider.maxTokens, 2000), // Limit max tokens on watch for performance
+            "temperature": provider.temperature
         ]
         
         request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
@@ -140,8 +140,8 @@ class LLMService: ObservableObject {
                 let requestBody: [String: Any] = [
                     "model": model.identifier,
                     "messages": messages,
-                    "max_tokens": 500,
-                    "temperature": 0.7,
+                    "max_tokens": min(provider.maxTokens, 2000), // Limit max tokens on watch for performance
+                    "temperature": provider.temperature,
                     "stream": true
                 ]
                 

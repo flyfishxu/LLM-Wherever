@@ -46,6 +46,32 @@ struct APIProviderDetailView: View {
                 }
                 
                 Section {
+                    ParameterSliderView(
+                        title: "Temperature",
+                        description: "Controls randomness in responses",
+                        systemImage: "thermometer",
+                        value: $viewModel.provider.temperature,
+                        range: 0.0...2.0,
+                        step: 0.1,
+                        displayFormatter: { String(format: "%.1f", $0) },
+                        inputValidator: { Double($0) }
+                    )
+                    
+                    IntParameterSliderView(
+                        title: "Max Tokens",
+                        description: "Maximum response length",
+                        systemImage: "text.alignleft",
+                        value: $viewModel.provider.maxTokens,
+                        range: 100...8000,
+                        step: 100
+                    )
+                } header: {
+                    Text("AI Parameters")
+                } footer: {
+                    Text("Temperature controls creativity (0.0 = focused, 2.0 = creative). Max tokens limits response length. Higher values use more API quota.")
+                }
+                
+                Section {
                     Toggle("Enable", isOn: $viewModel.provider.isActive)
                 } header: {
                     Text("Status")
