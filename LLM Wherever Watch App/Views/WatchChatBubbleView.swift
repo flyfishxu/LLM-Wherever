@@ -126,12 +126,12 @@ struct WatchChatBubbleView: View {
                                 .tint(.orange)
                         } else {
                             Image(systemName: "chevron.down")
-                                .font(.system(size: 11))
+                                .font(.system(size: 12))
                                 .foregroundStyle(.secondary)
                         }
                     } else {
                         Text(isStreaming ? "Thinking..." : "Details")
-                            .font(.system(size: 13))
+                            .font(.system(size: 14))
                             .foregroundStyle(.secondary)
                         
                         Spacer()
