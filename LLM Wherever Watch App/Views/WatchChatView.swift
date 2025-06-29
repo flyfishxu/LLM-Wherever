@@ -24,10 +24,7 @@ struct WatchChatView: View {
                 ScrollView {
                     LazyVStack(spacing: 4) {
                         ForEach(chatMessages) { message in
-                            WatchChatBubbleView(
-                                message: message,
-                                isLoading: isLoading && message == chatMessages.last && message.role == .assistant && message.content.isEmpty
-                            )
+                            WatchChatBubbleView(message: message)
                             .id(message.id)
                         }
                         

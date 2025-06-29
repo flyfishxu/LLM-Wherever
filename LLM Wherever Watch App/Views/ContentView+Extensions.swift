@@ -71,14 +71,24 @@ extension ContentView {
                 updatedMessage.content = partialContent
                 self.chatMessages[index] = updatedMessage
             }
+        } onThinkingUpdate: { thinkingContent in
+            // Real-time thinking content update
+            if let messageId = self.streamingMessageId,
+               let index = self.chatMessages.firstIndex(where: { $0.id == messageId }) {
+                var updatedMessage = self.chatMessages[index]
+                updatedMessage.thinkingContent = thinkingContent
+                self.chatMessages[index] = updatedMessage
+            }
         } onThinkingComplete: { thinkingContent, thinkingDuration in
             // Called when thinking ends (first token received)
+            
             if let messageId = self.streamingMessageId,
                let index = self.chatMessages.firstIndex(where: { $0.id == messageId }) {
                 var updatedMessage = self.chatMessages[index]
                 updatedMessage.thinkingContent = thinkingContent
                 updatedMessage.thinkingDuration = thinkingDuration
                 self.chatMessages[index] = updatedMessage
+                
             }
         } onComplete: { finalContent in
             // Complete response

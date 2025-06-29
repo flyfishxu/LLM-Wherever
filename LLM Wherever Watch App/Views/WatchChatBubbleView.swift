@@ -9,16 +9,24 @@ import SwiftUI
 
 struct WatchChatBubbleView: View {
     let message: ChatMessage
-    let isLoading: Bool // Add loading state
     @State private var isThinkingCollapsed: Bool = true
     
-    init(message: ChatMessage, isLoading: Bool = false) {
+    init(message: ChatMessage) {
         self.message = message
-        self.isLoading = isLoading
     }
     
     var isSystemMessage: Bool {
         message.role == .assistant && message.modelInfo?.contains("System") == true
+    }
+    
+    // Smart detection of streaming state based on message content
+    var isStreaming: Bool {
+        // If there's thinking content but no thinking duration, it's still streaming thinking
+        // If there's thinking content and no regular content, it's still in thinking phase
+        if let thinkingContent = message.thinkingContent, !thinkingContent.isEmpty {
+            return message.thinkingDuration == nil || message.content.isEmpty
+        }
+        return false
     }
     
     var backgroundColor: Color {
@@ -57,14 +65,9 @@ struct WatchChatBubbleView: View {
                 
                 // Main message bubble with thinking process inside
                 VStack(alignment: .leading, spacing: 0) {
-                    // Show loading/thinking state for AI messages that are loading
-                    if message.role == .assistant && isLoading && message.content.isEmpty {
-                        loadingThinkingSection
-                            .padding(.bottom, 0)
-                    }
-                    // Thinking process section for AI messages (inside the bubble)
-                    else if message.role == .assistant, let thinkingContent = message.thinkingContent {
-                        thinkingSection(content: thinkingContent)
+                    // Thinking process section for AI messages (show thinking content when available)
+                    if message.role == .assistant, let thinkingContent = message.thinkingContent, !thinkingContent.isEmpty {
+                        thinkingSection(content: thinkingContent, isStreaming: isStreaming)
                             .padding(.bottom, message.content.isEmpty ? 0 : 6)
                     }
                     
@@ -96,7 +99,7 @@ struct WatchChatBubbleView: View {
     }
     
     @ViewBuilder
-    private func thinkingSection(content: String) -> some View {
+    private func thinkingSection(content: String, isStreaming: Bool) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             Button(action: {
                 withAnimation(.easeInOut(duration: 0.3)) {
@@ -107,27 +110,42 @@ struct WatchChatBubbleView: View {
                     Image(systemName: "brain.head.profile")
                         .font(.system(size: 12))
                         .foregroundStyle(.orange)
+                        .symbolEffect(.pulse, options: isStreaming ? .repeating : .default)
                     
                     if isThinkingCollapsed {
-                        Text(thinkingDurationText)
+                        Text(isStreaming ? "Thinking..." : thinkingDurationText)
                             .font(.system(size: 13))
                             .foregroundStyle(.secondary)
                         
                         Spacer()
                         
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
+                        if isStreaming {
+                            ProgressView()
+                                .frame(width: 10, height: 10)
+                                .controlSize(.mini)
+                                .tint(.orange)
+                        } else {
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                        }
                     } else {
-                        Text("Details")
+                        Text(isStreaming ? "Thinking..." : "Details")
                             .font(.system(size: 13))
                             .foregroundStyle(.secondary)
                         
                         Spacer()
                         
-                        Image(systemName: "chevron.up")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
+                        if isStreaming {
+                            ProgressView()
+                                .frame(width: 10, height: 10)
+                                .controlSize(.mini)
+                                .tint(.orange)
+                        } else {
+                            Image(systemName: "chevron.up")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
                 .padding(.horizontal, 4)
@@ -140,16 +158,41 @@ struct WatchChatBubbleView: View {
             .buttonStyle(.plain)
             
             if !isThinkingCollapsed {
-                Text(content)
-                    .font(.system(size: 10))
-                    .multilineTextAlignment(.leading)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 3)
-                    .padding(.vertical, 3)
-                    .background(
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(.orange.opacity(0.08))
-                    )
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(content.isEmpty ? "" : content)
+                        .font(.system(size: 10))
+                        .multilineTextAlignment(.leading)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 3)
+                        .padding(.vertical, 3)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(.orange.opacity(0.08))
+                        )
+                    
+                    // Show streaming indicator at the end if still streaming
+                    if isStreaming && !content.isEmpty {
+                        HStack {
+                            Spacer()
+                            HStack(spacing: 2) {
+                                Text("●")
+                                    .font(.system(size: 6))
+                                    .foregroundStyle(.orange)
+                                    .symbolEffect(.pulse, options: .repeating)
+                                Text("●")
+                                    .font(.system(size: 6))
+                                    .foregroundStyle(.orange)
+                                    .symbolEffect(.pulse.byLayer, options: .repeating)
+                                Text("●")
+                                    .font(.system(size: 6))
+                                    .foregroundStyle(.orange)
+                                    .symbolEffect(.pulse, options: .repeating)
+                            }
+                        }
+                        .padding(.horizontal, 3)
+                        .padding(.top, 2)
+                    }
+                }
             }
         }
     }
@@ -163,40 +206,6 @@ struct WatchChatBubbleView: View {
             }
         }
         return "Thinking..."
-    }
-    
-    @ViewBuilder
-    private var loadingThinkingSection: some View {
-        HStack() {
-            // Animated thinking icon
-            Image(systemName: "brain.head.profile")
-                .font(.system(size: 12))
-                .foregroundStyle(.orange)
-                .symbolEffect(.pulse, options: .repeating)
-            
-            VStack(alignment: .leading, spacing: 1) {
-                Text("Thinking...")
-                    .font(.system(size: 13))
-                    .foregroundStyle(.primary)
-                
-                Text("Analyzing your request")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-            }
-            
-            Spacer()
-            
-            ProgressView()
-                .frame(width: 12, height: 12)
-                .controlSize(.mini)
-                .tint(.orange)
-        }
-        .padding(.horizontal, 4)
-        .padding(.vertical, 3)
-        .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(.orange.opacity(0.15))
-        )
     }
 }
 
@@ -214,8 +223,7 @@ struct WatchChatBubbleView: View {
         
         // Loading state example
         WatchChatBubbleView(
-            message: ChatMessage(role: .assistant, content: "", modelInfo: "GPT-4"),
-            isLoading: true
+            message: ChatMessage(role: .assistant, content: "", modelInfo: "GPT-4")
         )
     }
 } 

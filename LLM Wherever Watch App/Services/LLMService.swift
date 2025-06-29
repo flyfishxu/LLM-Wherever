@@ -20,7 +20,6 @@ class LLMService: ObservableObject {
     ) async throws -> (content: String, thinkingContent: String?, thinkingDuration: TimeInterval?) {
         
         let startTime = Date()
-        let userMessage = message // Store original message
         
         // Check if provider is active
         guard provider.isActive else {
@@ -81,15 +80,15 @@ class LLMService: ObservableObject {
             throw LLMError.invalidResponse
         }
         
-        // Calculate thinking duration and generate thinking content
+        // For non-streaming responses, thinking content is usually not available
+        // as it's typically only provided during streaming via reasoning_content
         let endTime = Date()
-        let thinkingDuration = endTime.timeIntervalSince(startTime)
-        let thinkingContent = generateThinkingContent(for: userMessage, model: model, duration: thinkingDuration)
+        let duration = endTime.timeIntervalSince(startTime)
         
         return (
             content: content.trimmingCharacters(in: .whitespacesAndNewlines),
-            thinkingContent: thinkingContent,
-            thinkingDuration: thinkingDuration
+            thinkingContent: nil, // Non-streaming doesn't provide thinking content in new format
+            thinkingDuration: nil
         )
     }
     
@@ -100,6 +99,7 @@ class LLMService: ObservableObject {
         model: LLMModel,
         chatHistory: [ChatMessage] = [],
         onUpdate: @escaping (String) -> Void,
+        onThinkingUpdate: @escaping (String) -> Void, // New callback for real-time thinking updates
         onThinkingComplete: @escaping (String, TimeInterval) -> Void, // Called when thinking ends
         onComplete: @escaping (String) -> Void, // Called when response is complete
         onError: @escaping (Error) -> Void
@@ -154,8 +154,10 @@ class LLMService: ObservableObject {
                     throw LLMError.httpError((response as? HTTPURLResponse)?.statusCode ?? 0)
                 }
                 
-                var completeText = ""
-                var firstTokenReceived = false
+                var completeContent = ""
+                var completeThinking = ""
+                var isThinking = false
+                var thinkingCompleted = false
                 var thinkingEndTime: Date?
                 
                 for try await line in asyncBytes.lines {
@@ -170,33 +172,46 @@ class LLMService: ObservableObject {
                            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                            let choices = json["choices"] as? [[String: Any]],
                            let firstChoice = choices.first,
-                           let delta = firstChoice["delta"] as? [String: Any],
-                           let content = delta["content"] as? String {
+                           let delta = firstChoice["delta"] as? [String: Any] {
                             
-                            // Mark when first token is received (thinking ends)
-                            if !firstTokenReceived {
-                                firstTokenReceived = true
-                                thinkingEndTime = Date()
+                            // Check for reasoning content (thinking)
+                            if let reasoningContent = delta["reasoning_content"] as? String, !reasoningContent.isEmpty {
+                                isThinking = true
+                                completeThinking += reasoningContent
                                 
-                                // Generate thinking content immediately when thinking ends
-                                let thinkingDuration = thinkingEndTime!.timeIntervalSince(startTime)
-                                let thinkingContent = generateThinkingContent(for: message, model: model, duration: thinkingDuration)
-                                
+                                // Real-time thinking content update
                                 await MainActor.run {
-                                    onThinkingComplete(thinkingContent, thinkingDuration)
+                                    onThinkingUpdate(completeThinking.trimmingCharacters(in: .whitespacesAndNewlines))
                                 }
                             }
                             
-                            completeText += content
-                            await MainActor.run {
-                                onUpdate(completeText)
+                            // Check for actual content
+                            if let content = delta["content"] as? String, !content.isEmpty {
+                                // If we were thinking and now have content, thinking is complete
+                                if isThinking && !thinkingCompleted {
+                                    thinkingCompleted = true
+                                    thinkingEndTime = Date()
+                                    let thinkingDuration = thinkingEndTime!.timeIntervalSince(startTime)
+                                    
+                                    await MainActor.run {
+                                        onThinkingComplete(completeThinking.trimmingCharacters(in: .whitespacesAndNewlines), thinkingDuration)
+                                    }
+                                    
+                                    isThinking = false
+                                }
+                                
+                                completeContent += content
+                                
+                                await MainActor.run {
+                                    onUpdate(completeContent)
+                                }
                             }
                         }
                     }
                 }
                 
                 await MainActor.run {
-                    onComplete(completeText.trimmingCharacters(in: .whitespacesAndNewlines))
+                    onComplete(completeContent.trimmingCharacters(in: .whitespacesAndNewlines))
                 }
                 
             } catch {
@@ -207,50 +222,7 @@ class LLMService: ObservableObject {
         }
     }
     
-    // Generate simulated thinking content based on user message
-    private func generateThinkingContent(for message: String, model: LLMModel, duration: TimeInterval) -> String {
-        let messageLength = message.count
-        let isQuestion = message.contains("?") || message.lowercased().contains("what") || 
-                        message.lowercased().contains("how") || message.lowercased().contains("why") ||
-                        message.lowercased().contains("when") || message.lowercased().contains("where")
-        
-        var thoughts: [String] = []
-        
-        // Analyze the input
-        if messageLength < 20 {
-            thoughts.append("Processing a short user input...")
-        } else if messageLength > 100 {
-            thoughts.append("Analyzing a detailed user message...")
-        } else {
-            thoughts.append("Understanding the user's request...")
-        }
-        
-        // Add thinking based on message type
-        if isQuestion {
-            thoughts.append("This appears to be a question requiring a thoughtful response.")
-            thoughts.append("Considering the best way to provide helpful information.")
-        } else {
-            thoughts.append("Analyzing the user's statement and determining appropriate response.")
-        }
-        
-        // Add model-specific thoughts
-        if model.name.contains("GPT") {
-            thoughts.append("Drawing upon training knowledge to formulate response.")
-        } else if model.name.contains("Claude") {
-            thoughts.append("Carefully considering the nuances of the request.")
-        }
-        
-        // Add duration-based thoughts
-        if duration > 2.0 {
-            thoughts.append("Taking time to ensure accuracy and relevance.")
-        } else if duration > 1.0 {
-            thoughts.append("Quickly processing and preparing response.")
-        }
-        
-        thoughts.append("Finalizing response structure and content.")
-        
-        return thoughts.joined(separator: "\n\n")
-    }
+
 }
 
 enum LLMError: LocalizedError {

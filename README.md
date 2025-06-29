@@ -132,7 +132,3 @@ MIT License - See LICENSE file for details
 ## Contributing
 
 Issues and Pull Requests are welcome to improve this project!
-
----
-
-Made with ❤️ for Apple ecosystem 
