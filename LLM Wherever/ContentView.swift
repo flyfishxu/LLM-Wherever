@@ -10,6 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var connectivityManager = WatchConnectivityManager.shared
     @StateObject private var mainViewModel = MainViewModel()
+    @State private var showingDefaultSettings = false
     
     var body: some View {
         NavigationStack {
@@ -59,7 +60,7 @@ struct ContentView: View {
                                         }
                                     )) {
                                         ForEach(provider.models) { model in
-                                            Text(model.name).tag(model.id)
+                                            Text(model.effectiveName).tag(model.id)
                                         }
                                     }
                                     .pickerStyle(.automatic)
@@ -74,9 +75,9 @@ struct ContentView: View {
                             .padding(.vertical, 8)
                     }
                 } header: {
-                    Text("Default Settings")
+                    Text("Watch Default Selection")
                 } footer: {
-                    Text("Set the default AI provider and model that will be used on Apple Watch. These settings will sync automatically.")
+                    Text("Set the default AI provider and model that will be used on Apple Watch. For global model parameter defaults, tap the settings icon above.")
                 }
                 
                 Section {
@@ -135,8 +136,20 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("LLM Wherever")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showingDefaultSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                }
+            }
             .sheet(isPresented: $mainViewModel.showingAddProvider) {
                 AddAPIProviderView()
+            }
+            .sheet(isPresented: $showingDefaultSettings) {
+                DefaultSettingsView()
             }
         }
     }

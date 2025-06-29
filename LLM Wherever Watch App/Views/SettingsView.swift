@@ -2,7 +2,7 @@
 //  SettingsView.swift
 //  LLM Wherever Watch App
 //
-//  Created by FlyfishXu on 2025/1/16.
+//  Created by FlyfishXu on 2025/6/30.
 //
 
 import SwiftUI
@@ -53,7 +53,7 @@ struct SettingsView: View {
                             } label: {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text(model.name)
+                                        Text(model.effectiveName)
                                             .font(.headline)
                                             .foregroundStyle(.primary)
                                         Text(model.identifier)
@@ -77,45 +77,7 @@ struct SettingsView: View {
                     }
                 }
                 
-                // AI Parameters Section
-                if var selectedProvider = connectivityManager.selectedProvider {
-                    Section {
-                        WatchParameterSliderView(
-                            title: "Temperature",
-                            systemImage: "thermometer",
-                            value: Binding(
-                                get: { selectedProvider.temperature },
-                                set: { newValue in
-                                    var updatedProvider = selectedProvider
-                                    updatedProvider.temperature = newValue
-                                    connectivityManager.updateProviderParameters(updatedProvider)
-                                }
-                            ),
-                            range: 0.0...2.0,
-                            step: 0.1,
-                            displayFormatter: { String(format: "%.1f", $0) },
-                            inputValidator: { Double($0) }
-                        )
-                        
-                        WatchIntParameterSliderView(
-                            title: "Max Tokens",
-                            systemImage: "text.alignleft",
-                            value: Binding(
-                                get: { selectedProvider.maxTokens },
-                                set: { newValue in
-                                    var updatedProvider = selectedProvider
-                                    updatedProvider.maxTokens = newValue
-                                    connectivityManager.updateProviderParameters(updatedProvider)
-                                }
-                            ),
-                            range: 100...4000,
-                            step: 100
-                        )
-                    } header: {
-                        Text("AI Parameters")
-                    }
-                }
-                
+
                 Section {
                     HStack {
                         Image(systemName: connectivityManager.isConnected ? "checkmark.circle.fill" : "xmark.circle.fill")

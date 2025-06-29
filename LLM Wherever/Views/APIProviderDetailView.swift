@@ -2,7 +2,7 @@
 //  APIProviderDetailView.swift
 //  LLM Wherever
 //
-//  Created by FlyfishXu on 2025/1/16.
+//  Created by FlyfishXu on 2025/6/30.
 //
 
 import SwiftUI
@@ -31,46 +31,7 @@ struct APIProviderDetailView: View {
                     Text("Enter the basic information for the API provider. The API Key will be stored securely.")
                 }
                 
-                Section {
-                    VStack(alignment: .leading) {
-                        Text("System Prompt")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        TextField("Enter system prompt...", text: $viewModel.provider.systemPrompt, axis: .vertical)
-                            .lineLimit(3...6)
-                    }
-                } header: {
-                    Text("AI Assistant Settings")
-                } footer: {
-                    Text("The system prompt will be shown as the first message when starting a conversation on Apple Watch.")
-                }
-                
-                Section {
-                    ParameterSliderView(
-                        title: "Temperature",
-                        description: "Controls randomness in responses",
-                        systemImage: "thermometer",
-                        value: $viewModel.provider.temperature,
-                        range: 0.0...2.0,
-                        step: 0.1,
-                        displayFormatter: { String(format: "%.1f", $0) },
-                        inputValidator: { Double($0) }
-                    )
-                    
-                    IntParameterSliderView(
-                        title: "Max Tokens",
-                        description: "Maximum response length",
-                        systemImage: "text.alignleft",
-                        value: $viewModel.provider.maxTokens,
-                        range: 100...8000,
-                        step: 100
-                    )
-                } header: {
-                    Text("AI Parameters")
-                } footer: {
-                    Text("Temperature controls creativity (0.0 = focused, 2.0 = creative). Max tokens limits response length. Higher values use more API quota.")
-                }
-                
+
                 Section {
                     Toggle("Enable", isOn: $viewModel.provider.isActive)
                 } header: {
@@ -78,20 +39,49 @@ struct APIProviderDetailView: View {
                 }
                 
                 Section {
-                    ForEach(viewModel.provider.models) { model in
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(model.name)
-                                    .font(.headline)
-                                Text(model.identifier)
+                    ForEach(viewModel.provider.models.indices, id: \.self) { index in
+                        NavigationLink {
+                            ModelConfigurationView(
+                                model: $viewModel.provider.models[index]
+                            )
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(viewModel.provider.models[index].effectiveName)
+                                        .font(.headline)
+                                    Text(viewModel.provider.models[index].identifier)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    
+                                    // Show configuration status
+                                    HStack {
+                                        if viewModel.provider.models[index].useCustomSettings {
+                                            Image(systemName: "gearshape.fill")
+                                                .foregroundStyle(.blue)
+                                            Text("Custom Settings")
+                                                .font(.caption2)
+                                                .foregroundStyle(.blue)
+                                        } else {
+                                            Image(systemName: "arrow.triangle.2.circlepath")
+                                                .foregroundStyle(.secondary)
+                                            Text("Using Global Defaults")
+                                                .font(.caption2)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                        Spacer()
+                                    }
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.tertiary)
                             }
-                            Spacer()
                         }
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
-                                viewModel.deleteModel(model)
+                                viewModel.deleteModel(viewModel.provider.models[index])
                             } label: {
                                 Label("Delete", systemImage: "trash")
                             }

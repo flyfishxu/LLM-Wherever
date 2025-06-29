@@ -2,7 +2,7 @@
 //  AddAPIProviderViewModel.swift
 //  LLM Wherever
 //
-//  Created by FlyfishXu on 2025/1/16.
+//  Created by FlyfishXu on 2025/6/30.
 //
 
 import Foundation
@@ -14,9 +14,6 @@ class AddAPIProviderViewModel: ObservableObject {
     @Published var customName = ""
     @Published var customBaseURL = ""
     @Published var apiKey = ""
-    @Published var systemPrompt = "Hello, how can I help you"
-    @Published var temperature = 0.7
-    @Published var maxTokens = 2000
     @Published var isCustomProvider = false
     @Published var fetchedModels: [LLMModel] = []
     @Published var isFetchingModels = false
@@ -117,10 +114,7 @@ class AddAPIProviderViewModel: ObservableObject {
             baseURL: customBaseURL,
             apiKey: apiKey,
             models: models,
-            isActive: true,
-            systemPrompt: systemPrompt,
-            temperature: temperature,
-            maxTokens: maxTokens
+            isActive: true
         )
         
         connectivityManager.addAPIProvider(newProvider)
@@ -151,10 +145,7 @@ class AddAPIProviderViewModel: ObservableObject {
             baseURL: customBaseURL,
             apiKey: apiKey,
             models: [],
-            isActive: true,
-            systemPrompt: systemPrompt,
-            temperature: temperature,
-            maxTokens: maxTokens
+            isActive: true
         )
     }
 }

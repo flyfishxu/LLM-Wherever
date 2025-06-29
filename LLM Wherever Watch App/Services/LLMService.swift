@@ -2,7 +2,7 @@
 //  LLMService.swift
 //  LLM Wherever Watch App
 //
-//  Created by FlyfishXu on 2025/1/16.
+//  Created by FlyfishXu on 2025/6/30.
 //
 
 import Foundation
@@ -48,11 +48,15 @@ class LLMService: ObservableObject {
             "content": message
         ])
         
+        // Use model's effective parameters (custom or global defaults)
+        let effectiveTemperature = model.effectiveTemperature
+        let effectiveMaxTokens = model.effectiveMaxTokens
+        
         let requestBody: [String: Any] = [
             "model": model.identifier,
             "messages": messages,
-            "max_tokens": min(provider.maxTokens, 2000), // Limit max tokens on watch for performance
-            "temperature": provider.temperature
+            "max_tokens": min(effectiveMaxTokens, 2000), // Limit max tokens on watch for performance
+            "temperature": effectiveTemperature
         ]
         
         request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
@@ -137,11 +141,15 @@ class LLMService: ObservableObject {
                     "content": message
                 ])
                 
+                // Use model's effective parameters (custom or global defaults)
+                let effectiveTemperature = model.effectiveTemperature
+                let effectiveMaxTokens = model.effectiveMaxTokens
+                
                 let requestBody: [String: Any] = [
                     "model": model.identifier,
                     "messages": messages,
-                    "max_tokens": min(provider.maxTokens, 2000), // Limit max tokens on watch for performance
-                    "temperature": provider.temperature,
+                    "max_tokens": min(effectiveMaxTokens, 2000), // Limit max tokens on watch for performance
+                    "temperature": effectiveTemperature,
                     "stream": true
                 ]
                 

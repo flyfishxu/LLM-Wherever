@@ -2,7 +2,7 @@
 //  ChatViewModel.swift
 //  LLM Wherever Watch App
 //
-//  Created by FlyfishXu on 2025/1/16.
+//  Created by FlyfishXu on 2025/6/30.
 //
 
 import Foundation
@@ -37,13 +37,17 @@ class ChatViewModel: ObservableObject {
     func initializeChatWithSystemPrompt() {
         // Only add system prompt if chat is empty
         guard chatMessages.isEmpty,
-              let provider = connectivityManager.selectedProvider else { return }
+              let provider = connectivityManager.selectedProvider,
+              let model = connectivityManager.selectedModel else { return }
         
-        let modelName = connectivityManager.selectedModel?.name ?? "AI Assistant"
+        // Use model's effective system prompt (custom or global default)
+        let effectiveSystemPrompt = model.effectiveSystemPrompt
+        let modelDisplayName = model.effectiveName
+        
         let systemMessage = ChatMessage(
             role: .assistant,
-            content: provider.systemPrompt,
-            modelInfo: "\(modelName) - System"
+            content: effectiveSystemPrompt,
+            modelInfo: "\(modelDisplayName) - System"
         )
         chatMessages.append(systemMessage)
     }
@@ -86,7 +90,7 @@ class ChatViewModel: ObservableObject {
         isLoading = true
         
         // Create AI message for stream update
-        let assistantMessage = ChatMessage(role: .assistant, content: "", modelInfo: model.name)
+        let assistantMessage = ChatMessage(role: .assistant, content: "", modelInfo: model.effectiveName)
         chatMessages.append(assistantMessage)
         streamingMessageId = assistantMessage.id
         

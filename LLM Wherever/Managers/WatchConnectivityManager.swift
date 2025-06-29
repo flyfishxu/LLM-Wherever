@@ -2,7 +2,7 @@
 //  WatchConnectivityManager.swift
 //  LLM Wherever
 //
-//  Created by FlyfishXu on 2025/1/16.
+//  Created by FlyfishXu on 2025/6/30.
 //
 
 import Foundation
@@ -242,16 +242,6 @@ extension WatchConnectivityManager: WCSessionDelegate {
     
     func session(_ session: WCSession, didReceiveMessage message: [String : Any]) {
         DispatchQueue.main.async {
-            // Handle parameter updates from watch
-            if let action = message["action"] as? String, action == "updateProviderParameters",
-               let providerData = message["providerData"] as? Data,
-               let updatedProvider = try? JSONDecoder().decode(APIProvider.self, from: providerData) {
-                
-                print("Received provider parameters update from watch for: \(updatedProvider.name)")
-                self.updateAPIProvider(updatedProvider)
-                return
-            }
-            
             print("Received message from watch: \(message)")
         }
     }
