@@ -9,9 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var connectivityManager = WatchConnectivityManager.shared
-    @StateObject private var modelFetchService = ModelFetchService.shared
-    @State private var showingAddProvider = false
-    @State private var refreshingProviders: Set<UUID> = []
+    @StateObject private var mainViewModel = MainViewModel()
     
     var body: some View {
         NavigationStack {
@@ -35,33 +33,29 @@ struct ContentView: View {
                 }
                 
                 Section {
-                    if !connectivityManager.apiProviders.isEmpty {
+                    if mainViewModel.hasProviders {
                         VStack(spacing: 16) {
                             HStack {
                                 Picker("Provider", selection: Binding(
-                                    get: { connectivityManager.selectedProvider?.id ?? UUID() },
+                                    get: { mainViewModel.selectedProviderID },
                                     set: { newValue in
-                                        if let provider = connectivityManager.apiProviders.first(where: { $0.id == newValue }) {
-                                            connectivityManager.selectProvider(provider)
-                                        }
+                                        mainViewModel.selectProvider(with: newValue)
                                     }
                                 )) {
-                                    ForEach(connectivityManager.apiProviders.filter(\.isActive)) { provider in
+                                    ForEach(mainViewModel.activeProviders) { provider in
                                         Text(provider.name.truncated(to: 15)).tag(provider.id)
                                     }
                                 }
                                 .pickerStyle(.automatic)
-                                .disabled(connectivityManager.apiProviders.filter(\.isActive).isEmpty)
+                                .disabled(mainViewModel.activeProviders.isEmpty)
                             }
                             
-                            if let provider = connectivityManager.selectedProvider, !provider.models.isEmpty {
+                            if let provider = mainViewModel.selectedProvider, !provider.models.isEmpty {
                                 HStack {
                                     Picker("Model", selection: Binding(
-                                        get: { connectivityManager.selectedModel?.id ?? UUID() },
+                                        get: { mainViewModel.selectedModelID },
                                         set: { newValue in
-                                            if let model = provider.models.first(where: { $0.id == newValue }) {
-                                                connectivityManager.selectModel(model)
-                                            }
+                                            mainViewModel.selectModel(with: newValue, from: provider)
                                         }
                                     )) {
                                         ForEach(provider.models) { model in
@@ -86,7 +80,7 @@ struct ContentView: View {
                 }
                 
                 Section {
-                    ForEach(connectivityManager.apiProviders) { provider in
+                    ForEach(mainViewModel.apiProviders) { provider in
                         NavigationLink(destination: APIProviderDetailView(provider: provider)) {
                             HStack {
                                 Circle()
@@ -97,7 +91,7 @@ struct ContentView: View {
                                     Text(provider.name.truncated(to: 15))
                                         .font(.headline)
                                     HStack(spacing: 4) {
-                                        if refreshingProviders.contains(provider.id) {
+                                        if mainViewModel.isRefreshing(provider) {
                                             ProgressView()
                                                 .controlSize(.mini)
                                             Text("Refreshing...")
@@ -114,23 +108,23 @@ struct ContentView: View {
                         }
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
-                                connectivityManager.deleteAPIProvider(provider)
+                                mainViewModel.deleteProvider(provider)
                             } label: {
                                 Label("Delete", systemImage: "trash")
                             }
                         }
                         .contextMenu {
                             Button {
-                                refreshModels(for: provider)
+                                mainViewModel.refreshModels(for: provider)
                             } label: {
                                 Label("Refresh Models", systemImage: "arrow.triangle.2.circlepath")
                             }
-                            .disabled(provider.apiKey.isEmpty)
+                            .disabled(!mainViewModel.canRefreshModels(for: provider))
                         }
                     }
-                    .onDelete(perform: deleteProvider)
+                    .onDelete(perform: mainViewModel.deleteProvider)
                     
-                    Button(action: { showingAddProvider = true }) {
+                    Button(action: mainViewModel.showAddProvider) {
                         Label("Add API Provider", systemImage: "plus.circle.fill")
                             .foregroundStyle(.blue)
                     }
@@ -141,43 +135,12 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("LLM Wherever")
-            .sheet(isPresented: $showingAddProvider) {
+            .sheet(isPresented: $mainViewModel.showingAddProvider) {
                 AddAPIProviderView()
             }
         }
     }
-    
-    private func deleteProvider(offsets: IndexSet) {
-        for offset in offsets {
-            let provider = connectivityManager.apiProviders[offset]
-            connectivityManager.deleteAPIProvider(provider)
-        }
-    }
-    
-    private func refreshModels(for provider: APIProvider) {
-        guard !provider.apiKey.isEmpty else { return }
-        
-        refreshingProviders.insert(provider.id)
-        
-        Task {
-            do {
-                let fetchedModels = try await modelFetchService.fetchModels(for: provider)
-                await MainActor.run {
-                    // Update model list
-                    var updatedProvider = provider
-                    updatedProvider.models = fetchedModels
-                    connectivityManager.updateAPIProvider(updatedProvider)
-                    refreshingProviders.remove(provider.id)
-                }
-            } catch {
-                await MainActor.run {
-                    refreshingProviders.remove(provider.id)
-                    // Error handling can be added here, but simplified for now
-                    print("Failed to refresh models: \(error)")
-                }
-            }
-        }
-    }
+
 }
 
 #Preview {

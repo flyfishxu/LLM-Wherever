@@ -17,6 +17,7 @@ struct WatchChatView: View {
     @State private var scrollID = UUID() // For triggering scroll updates
     
     let onSendMessage: (String) -> Void
+    let onClearError: () -> Void
     
     var body: some View {
         VStack(spacing: 0) {
@@ -59,7 +60,7 @@ struct WatchChatView: View {
         }
         .alert("Error", isPresented: .constant(errorMessage != nil)) {
             Button("OK") {
-                errorMessage = nil
+                onClearError()
             }
         } message: {
             if let errorMessage = errorMessage {
@@ -104,6 +105,7 @@ struct WatchChatView: View {
         inputText: .constant(""),
         isLoading: .constant(false),
         errorMessage: .constant(nil),
-        onSendMessage: { _ in }
+        onSendMessage: { _ in },
+        onClearError: { }
     )
 } 

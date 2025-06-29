@@ -9,20 +9,14 @@ import SwiftUI
 import WatchKit
 
 struct ContentView: View {
-    @StateObject internal var connectivityManager = WatchConnectivityManager.shared
-    @StateObject internal var llmService = LLMService.shared
-    @State internal var chatMessages: [ChatMessage] = []
-    @State internal var inputText = ""
-    @State internal var isLoading = false
-    @State private var showingSettings = false
-    @State internal var errorMessage: String?
-
-    @State internal var streamingMessageId: UUID?
+    @StateObject private var connectivityManager = WatchConnectivityManager.shared
+    @StateObject private var mainViewModel = MainViewModel()
+    @StateObject private var chatViewModel = ChatViewModel()
     
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                if connectivityManager.apiProviders.isEmpty || connectivityManager.selectedProvider == nil || connectivityManager.selectedModel == nil {
+                if chatViewModel.isSetupRequired {
                     SetupRequiredView(
                         isConnected: connectivityManager.isConnected,
                         hasAnyProviders: !connectivityManager.apiProviders.isEmpty,
@@ -30,44 +24,45 @@ struct ContentView: View {
                     )
                 } else {
                     WatchChatView(
-                        chatMessages: $chatMessages,
-                        inputText: $inputText,
-                        isLoading: $isLoading,
-                        errorMessage: $errorMessage,
-                        onSendMessage: sendTextMessage
+                        chatMessages: $chatViewModel.chatMessages,
+                        inputText: $chatViewModel.inputText,
+                        isLoading: $chatViewModel.isLoading,
+                        errorMessage: $chatViewModel.errorMessage,
+                        onSendMessage: chatViewModel.sendTextMessage,
+                        onClearError: chatViewModel.clearError
                     )
                     .onAppear {
-                        initializeChatWithSystemPrompt()
+                        chatViewModel.initializeChatWithSystemPrompt()
                     }
                     .onChange(of: connectivityManager.selectedProvider?.id) { _, _ in
-                        resetChatWithNewSystemPrompt()
+                        chatViewModel.resetChatWithNewSystemPrompt()
                     }
                     .onChange(of: connectivityManager.selectedModel?.id) { _, _ in
-                        resetChatWithNewSystemPrompt()
+                        chatViewModel.resetChatWithNewSystemPrompt()
                     }
                 }
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        showingSettings = true
+                        mainViewModel.openSettings()
                     } label: {
                         Image(systemName: "gear")
                             .font(.caption)
                     }
-                    .disabled(connectivityManager.apiProviders.isEmpty)
+                    .disabled(!mainViewModel.canShowSettings)
                 }
             }
-            .sheet(isPresented: $showingSettings) {
+            .sheet(isPresented: $mainViewModel.showingSettings) {
                 SettingsView()
             }
         }
-        .alert("Error", isPresented: .constant(errorMessage != nil)) {
+        .alert("Error", isPresented: .constant(chatViewModel.errorMessage != nil)) {
             Button("OK") {
-                errorMessage = nil
+                chatViewModel.clearError()
             }
         } message: {
-            if let errorMessage = errorMessage {
+            if let errorMessage = chatViewModel.errorMessage {
                 Text(errorMessage)
             }
         }

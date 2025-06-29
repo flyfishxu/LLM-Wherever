@@ -8,27 +8,22 @@
 import SwiftUI
 
 struct APIProviderDetailView: View {
-    @State private var provider: APIProvider
-    @State private var showingAddModel = false
-    @State private var isFetchingModels = false
-    @State private var fetchError: String?
+    @StateObject private var viewModel: APIProviderDetailViewModel
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var connectivityManager = WatchConnectivityManager.shared
-    @StateObject private var modelFetchService = ModelFetchService.shared
     
     init(provider: APIProvider) {
-        _provider = State(initialValue: provider)
+        _viewModel = StateObject(wrappedValue: APIProviderDetailViewModel(provider: provider))
     }
     
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Name", text: $provider.name)
-                    TextField("Base URL", text: $provider.baseURL)
+                    TextField("Name", text: $viewModel.provider.name)
+                    TextField("Base URL", text: $viewModel.provider.baseURL)
                         .keyboardType(.URL)
                         .textContentType(.URL)
-                    SecureField("API Key", text: $provider.apiKey)
+                    SecureField("API Key", text: $viewModel.provider.apiKey)
                         .textContentType(.password)
                 } header: {
                     Text("Basic Information")
@@ -41,7 +36,7 @@ struct APIProviderDetailView: View {
                         Text("System Prompt")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        TextField("Enter system prompt...", text: $provider.systemPrompt, axis: .vertical)
+                        TextField("Enter system prompt...", text: $viewModel.provider.systemPrompt, axis: .vertical)
                             .lineLimit(3...6)
                     }
                 } header: {
@@ -51,13 +46,13 @@ struct APIProviderDetailView: View {
                 }
                 
                 Section {
-                    Toggle("Enable", isOn: $provider.isActive)
+                    Toggle("Enable", isOn: $viewModel.provider.isActive)
                 } header: {
                     Text("Status")
                 }
                 
                 Section {
-                    ForEach(provider.models) { model in
+                    ForEach(viewModel.provider.models) { model in
                         HStack {
                             VStack(alignment: .leading) {
                                 Text(model.name)
@@ -70,22 +65,20 @@ struct APIProviderDetailView: View {
                         }
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
-                                if let index = provider.models.firstIndex(where: { $0.id == model.id }) {
-                                    provider.models.remove(at: index)
-                                }
+                                viewModel.deleteModel(model)
                             } label: {
                                 Label("Delete", systemImage: "trash")
                             }
                         }
                     }
-                    .onDelete(perform: deleteModel)
+                    .onDelete(perform: viewModel.deleteModel)
                     
                     // Fetch models from API button
                     Button(action: {
-                        fetchModels()
+                        viewModel.fetchModels()
                     }) {
                         HStack {
-                            if isFetchingModels {
+                            if viewModel.isFetchingModels {
                                 ProgressView()
                                     .controlSize(.small)
                                 Text("Fetching models...")
@@ -96,15 +89,15 @@ struct APIProviderDetailView: View {
                         }
                         .frame(maxWidth: .infinity)
                     }
-                    .disabled(isFetchingModels || provider.apiKey.isEmpty)
+                    .disabled(!viewModel.canFetchModels)
                     .buttonStyle(.borderedProminent)
                     
                     // Show fetch error
-                    if let error = fetchError {
+                    if viewModel.hasFetchError {
                         HStack {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundStyle(.orange)
-                            Text(error)
+                            Text(viewModel.fetchErrorMessage)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             Spacer()
@@ -115,7 +108,7 @@ struct APIProviderDetailView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                     
-                    Button(action: { showingAddModel = true }) {
+                    Button(action: viewModel.showAddModel) {
                         Label("Manually add model", systemImage: "plus.circle.fill")
                             .foregroundStyle(.blue)
                     }
@@ -125,12 +118,12 @@ struct APIProviderDetailView: View {
                     Text("Tap \"Fetch models from API\" to automatically get the latest available models, or manually add custom models.")
                 }
             }
-            .navigationTitle(provider.name)
+            .navigationTitle(viewModel.provider.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        connectivityManager.updateAPIProvider(provider)
+                        viewModel.saveProvider()
                         dismiss()
                     }
                     .fontWeight(.semibold)
@@ -142,45 +135,18 @@ struct APIProviderDetailView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingAddModel) {
+            .sheet(isPresented: $viewModel.showingAddModel) {
                 AddModelView { model in
-                    provider.models.append(model)
+                    viewModel.addModel(model)
                 }
             }
         }
     }
-    
-    private func deleteModel(offsets: IndexSet) {
-        provider.models.remove(atOffsets: offsets)
-    }
-    
-    private func fetchModels() {
-        guard !provider.apiKey.isEmpty else { return }
-        
-        isFetchingModels = true
-        fetchError = nil
-        
-        Task {
-            do {
-                let fetchedModels = try await modelFetchService.fetchModels(for: provider)
-                await MainActor.run {
-                    // Clear existing models and add fetched models
-                    provider.models = fetchedModels
-                    isFetchingModels = false
-                }
-            } catch {
-                await MainActor.run {
-                    fetchError = error.localizedDescription
-                    isFetchingModels = false
-                }
-            }
-        }
-    }
+
 }
 
 struct AddModelView: View {
-    @State private var modelName = ""
-    @State private var modelIdentifier = ""
+    @StateObject private var viewModel = AddModelViewModel()
     @Environment(\.dismiss) private var dismiss
     
     let onAdd: (LLMModel) -> Void
@@ -189,9 +155,9 @@ struct AddModelView: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Model Name", text: $modelName)
+                    TextField("Model Name", text: $viewModel.modelName)
                         .textContentType(.name)
-                    TextField("Model Identifier", text: $modelIdentifier)
+                    TextField("Model Identifier", text: $viewModel.modelIdentifier)
                         .textContentType(.name)
                 } header: {
                     Text("Model Information")
@@ -204,12 +170,14 @@ struct AddModelView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Add") {
-                        let model = LLMModel(name: modelName, identifier: modelIdentifier)
-                        onAdd(model)
-                        dismiss()
+                        if let model = viewModel.createModel() {
+                            onAdd(model)
+                            viewModel.reset()
+                            dismiss()
+                        }
                     }
                     .fontWeight(.semibold)
-                    .disabled(modelName.isEmpty || modelIdentifier.isEmpty)
+                    .disabled(!viewModel.canCreateModel)
                 }
                 
                 ToolbarItem(placement: .navigationBarLeading) {
