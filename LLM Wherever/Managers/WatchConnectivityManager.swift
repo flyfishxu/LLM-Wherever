@@ -77,8 +77,8 @@ class WatchConnectivityManager: NSObject, ObservableObject {
            let decoded = try? JSONDecoder().decode([APIProvider].self, from: data) {
             apiProviders = decoded
         } else {
-            // Add default API providers
-            apiProviders = [.openAI, .anthropic]
+            // No default API providers - start with empty list
+            apiProviders = []
         }
         
         // Load saved selections

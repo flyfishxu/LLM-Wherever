@@ -5,9 +5,9 @@ A LLM client application designed specifically for Apple Watch, allowing you to 
 ## Features
 
 ### 📱 iPhone App
-- **Smart API Configuration**: Add and manage multiple API providers (OpenAI, Anthropic, etc.)
+- **Smart API Configuration**: Add and manage multiple API providers (OpenAI, Claude, SiliconFlow, etc.)
 - **Automatic Model Fetching**: Automatically fetch available model lists after entering API Key
-- **Preset Templates**: Built-in configuration templates for popular APIs like OpenAI, Anthropic
+- **Preset Templates**: Built-in configuration templates for popular APIs like OpenAI, Claude, SiliconFlow
 - **Secure Storage**: API Keys are securely stored on local device
 - **Real-time Sync**: Configuration automatically syncs to Apple Watch
 
@@ -23,8 +23,9 @@ A LLM client application designed specifically for Apple Watch, allowing you to 
 
 ## Supported API Providers
 
-- **OpenAI**: GPT-4, GPT-3.5 Turbo
-- **Anthropic**: Claude 3.5 Sonnet, Claude 3 Haiku  
+- **OpenAI**: GPT-4, GPT-4o, GPT-3.5 Turbo
+- **Claude**: Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Haiku  
+- **SiliconFlow**: Qwen2.5-7B-Instruct, Qwen2.5-72B-Instruct, DeepSeek-V2.5
 - **Custom APIs**: Support for other APIs compatible with OpenAI format
 
 ## Technical Architecture
@@ -46,7 +47,7 @@ A LLM client application designed specifically for Apple Watch, allowing you to 
 ### 1. Configure API (iPhone)
 1. Open the "LLM Wherever" app on iPhone
 2. Tap "Add API Provider"
-3. Select a preset provider (OpenAI, Anthropic) or create custom configuration
+3. Select a preset provider (OpenAI, Claude, SiliconFlow) or create custom configuration
 4. Enter API Key
 5. Tap "Test Connection and Fetch Models" to automatically get available models
 6. Configuration will automatically sync to Apple Watch

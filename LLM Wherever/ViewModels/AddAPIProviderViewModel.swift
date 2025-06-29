@@ -206,7 +206,8 @@ extension AddAPIProviderViewModel {
 extension AddAPIProviderViewModel {
     enum ProviderTemplate: String, CaseIterable, Identifiable {
         case openai = "OpenAI"
-        case anthropic = "Anthropic"
+        case claude = "Claude"
+        case siliconflow = "SiliconFlow"
         case custom = "Custom"
         
         var id: String { rawValue }
@@ -216,7 +217,8 @@ extension AddAPIProviderViewModel {
         var icon: String {
             switch self {
             case .openai: return "brain.head.profile"
-            case .anthropic: return "sparkles"
+            case .claude: return "sparkles"
+            case .siliconflow: return "cpu"
             case .custom: return "gearshape"
             }
         }
@@ -224,7 +226,8 @@ extension AddAPIProviderViewModel {
         var baseURL: String {
             switch self {
             case .openai: return "https://api.openai.com/v1"
-            case .anthropic: return "https://api.anthropic.com/v1"
+            case .claude: return "https://api.anthropic.com/v1"
+            case .siliconflow: return "https://api.siliconflow.cn/v1"
             case .custom: return ""
             }
         }
@@ -234,12 +237,20 @@ extension AddAPIProviderViewModel {
             case .openai:
                 return [
                     LLMModel(name: "GPT-4", identifier: "gpt-4"),
+                    LLMModel(name: "GPT-4o", identifier: "gpt-4o"),
                     LLMModel(name: "GPT-3.5 Turbo", identifier: "gpt-3.5-turbo")
                 ]
-            case .anthropic:
+            case .claude:
                 return [
                     LLMModel(name: "Claude 3.5 Sonnet", identifier: "claude-3-5-sonnet-20241022"),
+                    LLMModel(name: "Claude 3 Opus", identifier: "claude-3-opus-20240229"),
                     LLMModel(name: "Claude 3 Haiku", identifier: "claude-3-haiku-20240307")
+                ]
+            case .siliconflow:
+                return [
+                    LLMModel(name: "Qwen2.5-7B-Instruct", identifier: "Qwen/Qwen2.5-7B-Instruct"),
+                    LLMModel(name: "Qwen2.5-72B-Instruct", identifier: "Qwen/Qwen2.5-72B-Instruct"),
+                    LLMModel(name: "DeepSeek-V2.5", identifier: "deepseek-ai/DeepSeek-V2.5")
                 ]
             case .custom:
                 return []

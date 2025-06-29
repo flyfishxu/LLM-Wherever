@@ -98,12 +98,20 @@ class ModelFetchService: ObservableObject {
         case "openai":
             return [
                 LLMModel(name: "GPT-4", identifier: "gpt-4"),
+                LLMModel(name: "GPT-4o", identifier: "gpt-4o"),
                 LLMModel(name: "GPT-3.5 Turbo", identifier: "gpt-3.5-turbo")
             ]
-        case "anthropic":
+        case "claude", "anthropic":
             return [
                 LLMModel(name: "Claude 3.5 Sonnet", identifier: "claude-3-5-sonnet-20241022"),
+                LLMModel(name: "Claude 3 Opus", identifier: "claude-3-opus-20240229"),
                 LLMModel(name: "Claude 3 Haiku", identifier: "claude-3-haiku-20240307")
+            ]
+        case "siliconflow":
+            return [
+                LLMModel(name: "Qwen2.5-7B-Instruct", identifier: "Qwen/Qwen2.5-7B-Instruct"),
+                LLMModel(name: "Qwen2.5-72B-Instruct", identifier: "Qwen/Qwen2.5-72B-Instruct"),
+                LLMModel(name: "DeepSeek-V2.5", identifier: "deepseek-ai/DeepSeek-V2.5")
             ]
         default:
             return [
