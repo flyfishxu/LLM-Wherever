@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4F481DC52E12A567009670C9 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 4F481DC42E12A567009670C9 /* MarkdownUI */; };
 		4F7C0CF42E113AF100979AD8 /* LLM Wherever Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 4F7C0CF32E113AF100979AD8 /* LLM Wherever Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -64,6 +65,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4F481DC52E12A567009670C9 /* MarkdownUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -132,6 +134,7 @@
 			);
 			name = "LLM Wherever Watch App";
 			packageProductDependencies = (
+				4F481DC42E12A567009670C9 /* MarkdownUI */,
 			);
 			productName = "LLM Wherever Watch App";
 			productReference = 4F7C0CF32E113AF100979AD8 /* LLM Wherever Watch App.app */;
@@ -164,6 +167,9 @@
 			);
 			mainGroup = 4F7C0CDD2E113AF100979AD8;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				4F481DC32E12A567009670C9 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4F7C0CE72E113AF100979AD8 /* Products */;
 			projectDirPath = "";
@@ -487,6 +493,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		4F481DC32E12A567009670C9 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4F481DC42E12A567009670C9 /* MarkdownUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4F481DC32E12A567009670C9 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
+			productName = MarkdownUI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 4F7C0CDE2E113AF100979AD8 /* Project object */;
 }

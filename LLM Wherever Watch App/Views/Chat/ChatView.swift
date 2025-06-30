@@ -94,8 +94,69 @@ struct ChatView: View {
     NavigationStack {
         ChatView(
             chatMessages: .constant([
-                ChatMessage(role: .user, content: "Hello!"),
-                ChatMessage(role: .assistant, content: "Hi there! How can I help you?", modelInfo: "GPT-4")
+                ChatMessage(role: .user, content: "Can you show me a code example with Markdown formatting?"),
+                
+                ChatMessage(
+                    role: .assistant,
+                    content: """
+                    Sure! Here's a **Swift** code example:
+                    
+                    ```swift
+                    func greetUser(name: String) {
+                        print("Hello, \\(name)!")
+                    }
+                    ```
+                    
+                    This function takes a `name` parameter and prints a greeting.
+                    
+                    You can also use *italic* and **bold** text for emphasis.
+                    
+                    Here's an ordered list:
+                    1. Create the function
+                    2. Add parameters
+                    3. Implement logic
+                    
+                    And an unordered list:
+                    - Supports **bold text**
+                    - Supports `inline code`
+                    - Supports *italic text*
+                    """,
+                    modelInfo: "GPT-4",
+                    thinkingContent: "The user wants to see a Markdown code example. I should demonstrate various Markdown elements including code blocks, bold, italic, lists, etc. to showcase the rendering capabilities.",
+                    thinkingDuration: 1.5
+                ),
+                
+                ChatMessage(role: .user, content: "What other Markdown features are supported?"),
+                
+                ChatMessage(
+                    role: .assistant,
+                    content: """
+                    ## Supported Markdown Features
+                    
+                    This chat interface now supports the following Markdown features:
+                    
+                    ### Text Formatting
+                    - **Bold text**
+                    - *Italic text*  
+                    - `Inline code`
+                    
+                    ### Code Blocks
+                    ```python
+                    def hello_world():
+                        print("Hello, World!")
+                    ```
+                    
+                    ### Lists
+                    1. Ordered list item 1
+                    2. Ordered list item 2
+                    
+                    - Unordered list item A
+                    - Unordered list item B
+                    
+                    Perfect for technical discussions! 🚀
+                    """,
+                    modelInfo: "Claude-3.5"
+                )
             ]),
             inputText: .constant(""),
             isLoading: .constant(false),

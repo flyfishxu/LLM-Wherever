@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MarkdownUI
 
 struct ChatBubbleView: View {
     let message: ChatMessage
@@ -71,11 +72,17 @@ struct ChatBubbleView: View {
                             .padding(.bottom, message.content.isEmpty ? 0 : 6)
                     }
                     
-                    // Main content
+                    // Main content with Markdown support for assistant messages
                     if !message.content.isEmpty {
-                        Text(message.content)
-                            .font(.caption)
-                            .multilineTextAlignment(message.role == .user ? .trailing : .leading)
+                        if message.role == .assistant {
+                            // Use Markdown for AI responses to support formatted text
+                            Markdown(message.content)
+                        } else {
+                            // Use plain text for user messages
+                            Text(message.content)
+                                .font(.caption)
+                                .multilineTextAlignment(.trailing)
+                        }
                     }
                 }
                 .padding(.horizontal, 8)
@@ -211,19 +218,20 @@ struct ChatBubbleView: View {
 
 #Preview {
     VStack(spacing: 8) {
-        ChatBubbleView(message: ChatMessage(role: .user, content: "Hello, this is a test message!"))
+        ChatBubbleView(message: ChatMessage(role: .user, content: "Hello!"))
         
         ChatBubbleView(message: ChatMessage(
             role: .assistant,
-            content: "Hi there! How can I help you?",
-            modelInfo: "GPT-4",
-            thinkingContent: "The user is greeting me. I should respond politely and offer assistance. This is a simple greeting that doesn't require complex reasoning.",
-            thinkingDuration: 2.3
+            content: "Hi there! This supports **bold**, *italic*, and `code` formatting.",
+            modelInfo: "GPT-4"
         ))
         
-        // Loading state example
-        ChatBubbleView(
-            message: ChatMessage(role: .assistant, content: "", modelInfo: "GPT-4")
-        )
+        ChatBubbleView(message: ChatMessage(
+            role: .assistant,
+            content: "",
+            modelInfo: "GPT-4",
+            thinkingContent: "The user is asking about something...",
+            thinkingDuration: nil  // Still thinking
+        ))
     }
 } 

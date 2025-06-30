@@ -15,6 +15,7 @@ A LLM client application designed specifically for Apple Watch, allowing you to 
 - **Ultimate Optimization**: Compact interface designed specifically for small screens
 - **Liquid Glass Style**: Featuring Apple's latest translucent material design
 - **Smart Conversations**: Support for multi-turn conversations with context preservation
+- **Markdown Support**: Rich text rendering for AI responses with syntax highlighting
 - **Haptic Feedback**: Rich haptic feedback enhances interaction experience
 - **Voice Input**: Support for voice-to-text input (system-level support)
 - **Smooth Animations**: Smooth scrolling and transition animations
@@ -58,6 +59,7 @@ A LLM client application designed specifically for Apple Watch, allowing you to 
 
 ### watchOS App
 - **Native SwiftUI**: Interface optimized specifically for watch
+- **MarkdownUI**: Rich text rendering using [swift-markdown-ui](https://github.com/gonzalezreal/swift-markdown-ui)
 - **Memory Optimization**: Optimized for watch hardware limitations
 - **Low Power Design**: Minimized battery consumption
 - **Adaptive Layout**: Support for different sizes of Apple Watch
@@ -77,8 +79,9 @@ A LLM client application designed specifically for Apple Watch, allowing you to 
 2. Select API provider and model for first use
 3. Input text or use voice input in the optimized chat interface
 4. Experience smooth conversation interaction and haptic feedback
-5. Long press send button to stop ongoing requests
-6. Tap the gear icon in top right corner to change model anytime
+5. AI responses support Markdown formatting (bold, italic, code blocks, lists, etc.)
+6. Long press send button to stop ongoing requests
+7. Tap the gear icon in top right corner to change model anytime
 
 ## Design Philosophy
 
@@ -113,6 +116,20 @@ A LLM client application designed specifically for Apple Watch, allowing you to 
 - **Apple Watch**: watchOS 10.0+
 - **Pairing Requirement**: Requires iPhone and Apple Watch to be paired
 - **Network Connection**: Requires internet connection to access LLM APIs
+
+## Dependencies
+
+This project uses the following third-party libraries:
+
+- [**swift-markdown-ui**](https://github.com/gonzalezreal/swift-markdown-ui): For rendering Markdown text in SwiftUI on Apple Watch
+
+### Adding Dependencies
+To build this project, you need to add swift-markdown-ui to your Xcode project:
+
+1. In Xcode, go to **File** → **Add Package Dependencies**
+2. Enter the URL: `https://github.com/gonzalezreal/swift-markdown-ui`
+3. Select version **2.0.2** or later
+4. Add **MarkdownUI** to your **LLM Wherever Watch App** target
 
 ## Development Notes
 
