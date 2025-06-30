@@ -26,9 +26,9 @@ class TTSService: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
     var isUpdatingFromiPhone = false
     
     // Convenience computed properties
-    var isEnabled: Bool {
-        get { settings.isEnabled }
-        set { settings.isEnabled = newValue }
+    var autoTTSAfterResponse: Bool {
+        get { settings.autoTTSAfterResponse }
+        set { settings.autoTTSAfterResponse = newValue }
     }
     
     var speechRate: Float {
@@ -62,9 +62,9 @@ class TTSService: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
         }
     }
     
-    /// Speak the provided text if TTS is enabled
+    /// Speak the provided text if auto TTS is enabled
     func speak(_ text: String) {
-        guard isEnabled && !text.isEmpty else { return }
+        guard autoTTSAfterResponse && !text.isEmpty else { return }
         
         // Stop any current speech
         stop()
