@@ -51,7 +51,7 @@ class TTSService: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
     
     private override init() {
         // Load user settings
-        self.settings = TTSSettings.shared
+        self.settings = TTSSettings.load()
         
         super.init()
         synthesizer.delegate = self
@@ -125,10 +125,8 @@ class TTSService: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
     func saveSettings() {
         settings.save()
         hasUnsavedChanges = false
-        // Only sync if not updating from iPhone to prevent loops
-        if !isUpdatingFromiPhone {
-            WatchConnectivityManager.shared.syncTTSToPhone()
-        }
+        // Sync to iPhone immediately after saving
+        WatchConnectivityManager.shared.syncTTSToPhone(settings)
     }
     
     /// Clean text for better TTS output

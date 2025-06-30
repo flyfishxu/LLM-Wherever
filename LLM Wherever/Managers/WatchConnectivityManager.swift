@@ -186,11 +186,6 @@ class WatchConnectivityManager: NSObject, ObservableObject {
             context["selectedModelBase64"] = modelData.base64EncodedString()
         }
         
-        // Add TTS settings
-        if let ttsData = try? JSONEncoder().encode(TTSSettings.shared) {
-            context["ttsSettingsBase64"] = ttsData.base64EncodedString()
-        }
-        
         // Add timestamp to ensure update
         context["syncTimestamp"] = Date().timeIntervalSince1970
         
@@ -231,9 +226,10 @@ class WatchConnectivityManager: NSObject, ObservableObject {
         syncWithApplicationContext()
     }
     
-    func syncTTSSettings(_ settings: TTSSettings) {
+    // Simple TTS sync to watch
+    func syncTTSToWatch(_ settings: TTSSettings) {
         guard WCSession.default.isReachable else {
-            print("Watch is not reachable, TTS settings will sync in background")
+            print("Watch is not reachable for TTS sync")
             return
         }
         
@@ -242,9 +238,12 @@ class WatchConnectivityManager: NSObject, ObservableObject {
             return
         }
         
-        let message = ["ttsSettingsBase64": ttsData.base64EncodedString()]
+        let message = [
+            "action": "updateTTSFromiPhone",
+            "ttsSettingsBase64": ttsData.base64EncodedString()
+        ]
         
-        WCSession.default.sendMessage(message, replyHandler: { response in
+        WCSession.default.sendMessage(message, replyHandler: { _ in
             print("TTS settings successfully synced to watch")
         }) { error in
             print("Failed to sync TTS settings to watch: \(error.localizedDescription)")
@@ -259,17 +258,13 @@ extension WatchConnectivityManager: WCSessionDelegate {
                 print("WCSession activation failed: \(error.localizedDescription)")
             } else {
                 print("WCSession activation successful")
-                // Immediately sync data to watch after session activation
+                // Sync data to watch after session activation
                 self.syncWithWatch()
-                // Also sync TTS settings immediately if watch is reachable
-                if session.isReachable {
-                    self.syncTTSSettings(TTSSettings.shared)
-                }
             }
         }
     }
     
-    func session(_ session: WCSession, didReceiveMessage message: [String : Any]) {
+    func session(_ session: WCSession, didReceiveMessage message: [String : Any], replyHandler: @escaping ([String : Any]) -> Void) {
         DispatchQueue.main.async {
             // Handle TTS settings update from Watch
             if let action = message["action"] as? String, action == "updateTTSFromWatch",
@@ -278,23 +273,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
                let ttsSettings = try? JSONDecoder().decode(TTSSettings.self, from: data) {
                 TTSService.shared.updateSettings(ttsSettings)
                 print("Updated TTS settings from Watch")
-                return
-            }
-            
-            print("Received message from watch: \(message)")
-        }
-    }
-    
-    func session(_ session: WCSession, didReceiveMessage message: [String : Any], replyHandler: @escaping ([String : Any]) -> Void) {
-        DispatchQueue.main.async {
-            // Handle TTS settings update from Watch with reply
-            if let action = message["action"] as? String, action == "updateTTSFromWatch",
-               let ttsBase64 = message["ttsSettingsBase64"] as? String,
-               let data = Data(base64Encoded: ttsBase64),
-               let ttsSettings = try? JSONDecoder().decode(TTSSettings.self, from: data) {
-                TTSService.shared.updateSettings(ttsSettings)
-                print("Updated TTS settings from Watch (with reply)")
-                replyHandler(["status": "ttsUpdated"])
+                replyHandler(["status": "success"])
                 return
             }
             
@@ -310,8 +289,6 @@ extension WatchConnectivityManager: WCSessionDelegate {
             if session.isReachable {
                 print("Watch became reachable, syncing data...")
                 self.syncWithWatch()
-                // Also sync TTS settings when watch becomes reachable
-                self.syncTTSSettings(TTSSettings.shared)
             }
         }
     }

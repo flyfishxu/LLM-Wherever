@@ -53,14 +53,16 @@ struct TTSSettings: Codable, Equatable {
         self.voiceLanguage = voiceLanguage
     }
     
-    static let shared: TTSSettings = {
+    // Load settings from UserDefaults
+    static func load() -> TTSSettings {
         guard let data = UserDefaults.standard.data(forKey: "TTSSettings"),
               let settings = try? JSONDecoder().decode(TTSSettings.self, from: data) else {
             return TTSSettings()
         }
         return settings
-    }()
+    }
     
+    // Save settings to UserDefaults
     func save() {
         if let data = try? JSONEncoder().encode(self) {
             UserDefaults.standard.set(data, forKey: "TTSSettings")

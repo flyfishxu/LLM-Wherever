@@ -116,13 +116,13 @@ class WatchConnectivityManager: NSObject, ObservableObject {
     }
     
     // Sync TTS settings from Watch to iPhone
-    func syncTTSToPhone() {
+    func syncTTSToPhone(_ settings: TTSSettings) {
         guard WCSession.default.isReachable else {
-            print("iPhone is not reachable, TTS settings will sync in background")
+            print("iPhone is not reachable for TTS sync")
             return
         }
         
-        guard let ttsData = try? JSONEncoder().encode(TTSSettings.shared) else {
+        guard let ttsData = try? JSONEncoder().encode(settings) else {
             print("Failed to encode TTS settings")
             return
         }
@@ -132,7 +132,7 @@ class WatchConnectivityManager: NSObject, ObservableObject {
             "ttsSettingsBase64": ttsData.base64EncodedString()
         ]
         
-        WCSession.default.sendMessage(message, replyHandler: { response in
+        WCSession.default.sendMessage(message, replyHandler: { _ in
             print("TTS settings successfully synced to iPhone")
         }) { error in
             print("Failed to sync TTS settings to iPhone: \(error.localizedDescription)")
@@ -207,37 +207,22 @@ extension WatchConnectivityManager: WCSessionDelegate {
             if let action = message["action"] as? String, action == "syncCheck" {
                 print("Received sync check notification")
                 self.loadDataFromApplicationContext()
-                // Reply with confirmation message
-                replyHandler(["status": "syncCompleted", "providersCount": self.apiProviders.count])
+                replyHandler(["status": "syncCompleted"])
                 return
             }
             
-            // Handle TTS settings update
-            if let ttsBase64 = message["ttsSettingsBase64"] as? String,
+            // Handle TTS settings update from iPhone
+            if let action = message["action"] as? String, action == "updateTTSFromiPhone",
+               let ttsBase64 = message["ttsSettingsBase64"] as? String,
                let data = Data(base64Encoded: ttsBase64),
                let ttsSettings = try? JSONDecoder().decode(TTSSettings.self, from: data) {
                 TTSService.shared.updateSettings(ttsSettings)
-                print("Updated TTS settings from iPhone (immediate)")
-                replyHandler(["status": "ttsUpdated"])
+                print("Updated TTS settings from iPhone")
+                replyHandler(["status": "success"])
                 return
             }
             
-            // For other message types, simply reply with confirmation
             replyHandler(["status": "received"])
-        }
-    }
-    
-    func session(_ session: WCSession, didReceiveMessage message: [String : Any]) {
-        DispatchQueue.main.async {
-            // Handle messages without reply handler (maintain backward compatibility)
-            if let action = message["action"] as? String, action == "syncCheck" {
-                print("Received sync check notification (no reply)")
-                self.loadDataFromApplicationContext()
-                return
-            }
-            
-            // Maintain legacy message handling logic as backup
-            self.processLegacyMessage(message)
         }
     }
     
@@ -286,14 +271,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
             receivedSelectedModel = model
         }
         
-        // Parse TTS settings
-        if let ttsBase64 = context["ttsSettingsBase64"] as? String,
-           let data = Data(base64Encoded: ttsBase64),
-           let ttsSettings = try? JSONDecoder().decode(TTSSettings.self, from: data) {
-            TTSService.shared.updateSettings(ttsSettings)
-            print("Updated TTS settings from iPhone")
-        }
-        
+        // TTS settings are now handled separately via direct messages
         // Sync data to local storage - always sync, even if providers list is empty
         // This ensures deletions are properly reflected on the watch
         self.syncLocalData(
@@ -307,45 +285,6 @@ extension WatchConnectivityManager: WCSessionDelegate {
         } else {
             print("Synced empty API providers list (all providers deleted)")
         }
-        
-        self.isSyncing = false
-    }
-    
-    // Process legacy message format (backward compatibility)
-    private func processLegacyMessage(_ message: [String: Any]) {
-        self.isSyncing = true
-        
-        var receivedProviders: [APIProvider] = []
-        var receivedSelectedProvider: APIProvider?
-        var receivedSelectedModel: LLMModel?
-        
-        // Parse received API providers (legacy format)
-        if let providersData = message["apiProviders"] as? [Data] {
-            receivedProviders = providersData.compactMap { data in
-                try? JSONDecoder().decode(APIProvider.self, from: data)
-            }.filter { $0.isActive }
-        }
-        
-        // Parse received selected provider (legacy format)
-        if let providerData = message["selectedProvider"] as? Data,
-           let provider = try? JSONDecoder().decode(APIProvider.self, from: providerData),
-           provider.isActive {
-            receivedSelectedProvider = provider
-        }
-        
-        // Parse received selected model (legacy format)
-        if let modelData = message["selectedModel"] as? Data,
-           let model = try? JSONDecoder().decode(LLMModel.self, from: modelData) {
-            receivedSelectedModel = model
-        }
-        
-        // Sync data to local storage - always sync, even if providers list is empty
-        // This ensures deletions are properly reflected on the watch
-        self.syncLocalData(
-            providers: receivedProviders,
-            selectedProvider: receivedSelectedProvider,
-            selectedModel: receivedSelectedModel
-        )
         
         self.isSyncing = false
     }
