@@ -16,29 +16,13 @@ struct SettingsView: View {
             List {
                 Section {
                     ForEach(connectivityManager.apiProviders) { provider in
-                        Button {
-                            connectivityManager.selectProvider(provider)
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(provider.name)
-                                        .font(.headline)
-                                        .foregroundStyle(.primary)
-                                    Text("\(provider.models.count) models")
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                }
-                                
-                                Spacer()
-                                
-                                if connectivityManager.selectedProvider?.id == provider.id {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(.blue)
-                                        .font(.caption)
-                                }
+                        WatchProviderRowView(
+                            provider: provider,
+                            isSelected: connectivityManager.selectedProvider?.id == provider.id,
+                            onTap: {
+                                connectivityManager.selectProvider(provider)
                             }
-                        }
-                        .buttonStyle(.plain)
+                        )
                     }
                 } header: {
                     Text("API Providers")
@@ -48,29 +32,13 @@ struct SettingsView: View {
                    !selectedProvider.models.isEmpty {
                     Section {
                         ForEach(selectedProvider.models) { model in
-                            Button {
-                                connectivityManager.selectModel(model)
-                            } label: {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(model.effectiveName)
-                                            .font(.headline)
-                                            .foregroundStyle(.primary)
-                                        Text(model.identifier)
-                                            .font(.caption2)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    
-                                    Spacer()
-                                    
-                                    if connectivityManager.selectedModel?.id == model.id {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundStyle(.blue)
-                                            .font(.caption)
-                                    }
+                            WatchModelRowView(
+                                model: model,
+                                isSelected: connectivityManager.selectedModel?.id == model.id,
+                                onTap: {
+                                    connectivityManager.selectModel(model)
                                 }
-                            }
-                            .buttonStyle(.plain)
+                            )
                         }
                     } header: {
                         Text("Models")
@@ -79,20 +47,18 @@ struct SettingsView: View {
                 
                 
                 Section {
-                    HStack {
-                        Text(connectivityManager.isConnected ? "Connected" : "Disconnected")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Image(systemName: connectivityManager.isConnected ? "checkmark.circle.fill" : "xmark.circle.fill")
-                            .foregroundStyle(connectivityManager.isConnected ? .green : .red)
-                    }
+                    WatchConnectionStatusView(
+                        isConnected: connectivityManager.isConnected,
+                        isSyncing: connectivityManager.isSyncing,
+                        hasProviders: !connectivityManager.apiProviders.isEmpty
+                    )
                 } header: {
                     Text("Connection Status")
                 }
             }
-            .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)
+            .safeAreaInset(edge: .bottom) {
+                Spacer().frame(height: 28)
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {

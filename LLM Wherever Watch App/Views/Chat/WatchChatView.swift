@@ -14,7 +14,7 @@ struct WatchChatView: View {
     @Binding var errorMessage: String?
     
     @StateObject private var connectivityManager = WatchConnectivityManager.shared
-    @FocusState private var isTextFieldFocused: Bool
+
     @State private var scrollID = UUID() // For triggering scroll updates
     @State private var showingSettings = false
     
@@ -31,7 +31,10 @@ struct WatchChatView: View {
                                 .id(message.id)
                         }
                         
-                        inputSection
+                        WatchChatInputView(
+                            inputText: $inputText,
+                            onSendMessage: onSendMessage
+                        )
                     }
                     .padding(.horizontal, 6)
                     .padding(.top, 2)
@@ -84,29 +87,7 @@ struct WatchChatView: View {
         }
     }
     
-    private var inputSection: some View {
-        VStack(spacing: 12) {
-            // Separator line
-            Rectangle()
-                .fill(.gray.opacity(0.3))
-                .frame(height: 0.5)
-                .padding(.horizontal, 20)
-                .padding(.top, 8)
-            
-            // Input field
-            TextField("Enter message", text: $inputText)
-                .font(.caption)
-                .focused($isTextFieldFocused)
-                .onSubmit {
-                    onSendMessage(inputText)
-                    inputText = ""
-                }
-                .padding(.horizontal, 10)
-                .padding(.bottom, 6)
-                .clipShape(RoundedRectangle(cornerRadius: 24))
-        
-        }
-    }
+
 }
 
 #Preview {
