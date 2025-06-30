@@ -21,6 +21,8 @@ struct ChatView: View {
     
     let onSendMessage: (String) -> Void
     let onClearError: () -> Void
+    let onDeleteMessage: ((UUID) -> Void)?
+    let onRegenerateMessage: ((UUID) -> Void)?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -28,8 +30,12 @@ struct ChatView: View {
                 ScrollView {
                     LazyVStack(spacing: 4) {
                         ForEach(chatMessages) { message in
-                            ChatBubbleView(message: message)
-                                .id(message.id)
+                            ChatBubbleView(
+                                message: message,
+                                onDelete: onDeleteMessage,
+                                onRegenerate: onRegenerateMessage
+                            )
+                            .id(message.id)
                         }
                         
                         ChatInputView(
@@ -189,7 +195,9 @@ struct ChatView: View {
             isLoading: .constant(false),
             errorMessage: .constant(nil),
             onSendMessage: { _ in },
-            onClearError: { }
+            onClearError: { },
+            onDeleteMessage: nil,
+            onRegenerateMessage: nil
         )
     }
 } 

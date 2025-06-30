@@ -10,10 +10,16 @@ import MarkdownUI
 
 struct ChatBubbleView: View {
     let message: ChatMessage
-    @State private var isThinkingCollapsed: Bool = true
+    let onDelete: ((UUID) -> Void)?
+    let onRegenerate: ((UUID) -> Void)?
     
-    init(message: ChatMessage) {
+    @State private var isThinkingCollapsed: Bool = true
+    @State private var showingActionSheet: Bool = false
+    
+    init(message: ChatMessage, onDelete: ((UUID) -> Void)? = nil, onRegenerate: ((UUID) -> Void)? = nil) {
         self.message = message
+        self.onDelete = onDelete
+        self.onRegenerate = onRegenerate
     }
     
     var isSystemMessage: Bool {
@@ -92,6 +98,9 @@ struct ChatBubbleView: View {
                         .fill(backgroundColor)
                 )
                 .foregroundStyle(textColor)
+                .onLongPressGesture {
+                    showingActionSheet = true
+                }
                 
                 Text(message.timestamp, style: .time)
                     .font(.system(size: 9))
@@ -102,6 +111,13 @@ struct ChatBubbleView: View {
             if message.role == .assistant {
                 Spacer(minLength: 20)
             }
+        }
+        .sheet(isPresented: $showingActionSheet) {
+            MessageActionSheet(
+                message: message,
+                onDelete: onDelete,
+                onRegenerate: onRegenerate
+            )
         }
     }
     
@@ -218,20 +234,32 @@ struct ChatBubbleView: View {
 
 #Preview {
     VStack(spacing: 8) {
-        ChatBubbleView(message: ChatMessage(role: .user, content: "Hello!"))
+        ChatBubbleView(
+            message: ChatMessage(role: .user, content: "Hello!"),
+            onDelete: { _ in print("Delete message") },
+            onRegenerate: { _ in print("Regenerate message") }
+        )
         
-        ChatBubbleView(message: ChatMessage(
-            role: .assistant,
-            content: "Hi there! This supports **bold**, *italic*, and `code` formatting.",
-            modelInfo: "GPT-4"
-        ))
+        ChatBubbleView(
+            message: ChatMessage(
+                role: .assistant,
+                content: "Hi there! This supports **bold**, *italic*, and `code` formatting.",
+                modelInfo: "GPT-4"
+            ),
+            onDelete: { _ in print("Delete message") },
+            onRegenerate: { _ in print("Regenerate message") }
+        )
         
-        ChatBubbleView(message: ChatMessage(
-            role: .assistant,
-            content: "",
-            modelInfo: "GPT-4",
-            thinkingContent: "The user is asking about something...",
-            thinkingDuration: nil  // Still thinking
-        ))
+        ChatBubbleView(
+            message: ChatMessage(
+                role: .assistant,
+                content: "",
+                modelInfo: "GPT-4",
+                thinkingContent: "The user is asking about something...",
+                thinkingDuration: nil  // Still thinking
+            ),
+            onDelete: { _ in print("Delete message") },
+            onRegenerate: { _ in print("Regenerate message") }
+        )
     }
-} 
+}

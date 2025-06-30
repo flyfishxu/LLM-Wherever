@@ -37,7 +37,9 @@ struct EmptyStateView: View {
                         isLoading: $chatViewModel.isLoading,
                         errorMessage: $chatViewModel.errorMessage,
                         onSendMessage: chatViewModel.sendTextMessage,
-                        onClearError: chatViewModel.clearError
+                        onClearError: chatViewModel.clearError,
+                        onDeleteMessage: chatViewModel.deleteMessage(withId:),
+                        onRegenerateMessage: chatViewModel.regenerateResponse(forMessageId:)
                     ).onAppear {
                         chatViewModel.startNewChat()
                     }) {
@@ -60,7 +62,9 @@ struct EmptyStateView: View {
                         isLoading: $chatViewModel.isLoading,
                         errorMessage: $chatViewModel.errorMessage,
                         onSendMessage: chatViewModel.sendTextMessage,
-                        onClearError: chatViewModel.clearError
+                        onClearError: chatViewModel.clearError,
+                        onDeleteMessage: chatViewModel.deleteMessage(withId:),
+                        onRegenerateMessage: chatViewModel.regenerateResponse(forMessageId:)
                     ).onAppear {
                         chatViewModel.startNewChat()
                     }) {

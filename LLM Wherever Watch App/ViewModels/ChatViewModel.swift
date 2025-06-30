@@ -76,6 +76,119 @@ class ChatViewModel: ObservableObject {
         errorMessage = nil
     }
     
+    // MARK: - Message Actions
+    
+    /// Delete a specific message by ID
+    func deleteMessage(withId messageId: UUID) {
+        // Stop any ongoing TTS
+        ttsService.stop()
+        
+        // Find and remove the message
+        if let index = chatMessages.firstIndex(where: { $0.id == messageId }) {
+            chatMessages.remove(at: index)
+            
+            // Send haptic feedback
+            WKInterfaceDevice.current().play(.click)
+            
+            // Auto-save to history after deletion
+            saveCurrentChatToHistory()
+        }
+    }
+    
+    /// Regenerate the response for the last assistant message
+    func regenerateLastResponse() {
+        // Stop any ongoing TTS
+        ttsService.stop()
+        
+        // Find the last assistant message and the user message before it
+        guard let lastAssistantIndex = chatMessages.lastIndex(where: { $0.role == .assistant }),
+              lastAssistantIndex > 0 else { return }
+        
+        // Find the user message that triggered this assistant response
+        let userIndex = lastAssistantIndex - 1
+        guard userIndex >= 0,
+              userIndex < chatMessages.count,
+              chatMessages[userIndex].role == .user else { return }
+        
+        let userMessage = chatMessages[userIndex]
+        
+        // Remove the assistant message
+        chatMessages.remove(at: lastAssistantIndex)
+        
+        // Regenerate the response
+        regenerateResponse(for: userMessage.content)
+    }
+    
+    /// Regenerate response for a specific assistant message
+    func regenerateResponse(forMessageId messageId: UUID) {
+        // Stop any ongoing TTS
+        ttsService.stop()
+        
+        // Find the assistant message
+        guard let assistantIndex = chatMessages.firstIndex(where: { $0.id == messageId && $0.role == .assistant }),
+              assistantIndex > 0 else { return }
+        
+        // Find the user message that triggered this assistant response
+        let userIndex = assistantIndex - 1
+        guard userIndex >= 0,
+              userIndex < chatMessages.count,
+              chatMessages[userIndex].role == .user else { return }
+        
+        let userMessage = chatMessages[userIndex]
+        
+        // Remove the assistant message
+        chatMessages.remove(at: assistantIndex)
+        
+        // Regenerate the response
+        regenerateResponse(for: userMessage.content)
+    }
+    
+    private func regenerateResponse(for userMessageContent: String) {
+        guard let provider = connectivityManager.selectedProvider,
+              let model = connectivityManager.selectedModel else { return }
+        
+        // Send haptic feedback
+        WKInterfaceDevice.current().play(.click)
+        
+        isLoading = true
+        
+        // Create new AI message for stream update
+        let assistantMessage = ChatMessage(role: .assistant, content: "", modelInfo: model.effectiveName)
+        chatMessages.append(assistantMessage)
+        streamingMessageId = assistantMessage.id
+        
+        // Use stream transmission with current chat history (excluding the new empty message)
+        llmService.sendMessageStream(
+            userMessageContent,
+            provider: provider,
+            model: model,
+            chatHistory: Array(chatMessages.dropLast(1).suffix(5)) // Exclude the new empty AI message
+        ) { [weak self] partialContent in
+            Task { @MainActor in
+                self?.updateStreamingMessage(content: partialContent)
+            }
+        } onThinkingUpdate: { [weak self] thinkingContent in
+            Task { @MainActor in
+                self?.updateStreamingMessage(thinkingContent: thinkingContent)
+            }
+        } onThinkingComplete: { [weak self] thinkingContent, thinkingDuration in
+            Task { @MainActor in
+                self?.updateStreamingMessage(
+                    thinkingContent: thinkingContent,
+                    thinkingDuration: thinkingDuration
+                )
+            }
+        } onComplete: { [weak self] finalContent in
+            Task { @MainActor in
+                self?.completeStreamingMessage(content: finalContent)
+            }
+        } onError: { [weak self] error in
+            Task { @MainActor in
+                self?.handleStreamingError(error)
+            }
+        }
+    }
+    
     // MARK: - History Management
     
     /// Start a new chat (clear current messages and history reference)
