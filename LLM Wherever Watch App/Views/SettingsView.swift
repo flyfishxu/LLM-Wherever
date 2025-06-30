@@ -80,13 +80,12 @@ struct SettingsView: View {
                 
                 Section {
                     HStack {
-                        Image(systemName: connectivityManager.isConnected ? "checkmark.circle.fill" : "xmark.circle.fill")
-                            .foregroundStyle(connectivityManager.isConnected ? .green : .red)
-                        Text("iPhone Connection")
-                        Spacer()
                         Text(connectivityManager.isConnected ? "Connected" : "Disconnected")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                        Spacer()
+                        Image(systemName: connectivityManager.isConnected ? "checkmark.circle.fill" : "xmark.circle.fill")
+                            .foregroundStyle(connectivityManager.isConnected ? .green : .red)
                     }
                 } header: {
                     Text("Connection Status")
@@ -108,4 +107,4 @@ struct SettingsView: View {
 
 #Preview {
     SettingsView()
-} 
+}

@@ -39,12 +39,7 @@ struct ModelRowView: View {
                         Text("Custom Settings")
                             .font(.caption2)
                             .foregroundStyle(.blue)
-                    } else {
-                        Text("Using Global Defaults")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
                     }
-                    Spacer()
                 }
             }
         }

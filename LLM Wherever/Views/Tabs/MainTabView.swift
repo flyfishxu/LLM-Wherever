@@ -11,17 +11,39 @@ struct MainTabView: View {
     @StateObject private var mainViewModel = MainViewModel()
     
     var body: some View {
-        TabView {
-            Tab("Home", systemImage: "house") {
+        if #available(iOS 18.0, *) {
+            TabView {
+                Tab("Home", systemImage: "house") {
+                    ProvidersView()
+                }
+                
+                Tab("Search", systemImage: "magnifyingglass", role: .search) {
+                    SearchView()
+                }
+                
+                Tab("Settings", systemImage: "gearshape") {
+                    SettingsTabView()
+                }
+            }
+        } else {
+            TabView {
                 ProvidersView()
-            }
-            
-            Tab("Search", systemImage: "magnifyingglass", role: .search) {
+                    .tabItem {
+                        Image(systemName: "house")
+                        Text("Home")
+                    }
+                
                 SearchView()
-            }
-            
-            Tab("Settings", systemImage: "gearshape") {
+                    .tabItem {
+                        Image(systemName: "magnifyingglass")
+                        Text("Search")
+                    }
+                
                 SettingsTabView()
+                    .tabItem {
+                        Image(systemName: "gearshape")
+                        Text("Settings")
+                    }
             }
         }
     }

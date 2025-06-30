@@ -23,31 +23,12 @@ struct WatchChatView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Current model indicator
-            if let selectedModel = connectivityManager.selectedModel {
-                HStack {
-                    Image(systemName: "brain.head.profile")
-                        .font(.system(size: 10))
-                        .foregroundColor(.blue)
-                    Text(selectedModel.effectiveName)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.blue)
-                    Spacer()
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background(.blue.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .padding(.horizontal, 8)
-                .padding(.bottom, 4)
-            }
-            
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 4) {
                         ForEach(chatMessages) { message in
                             WatchChatBubbleView(message: message)
-                            .id(message.id)
+                                .id(message.id)
                         }
                         
                         inputSection
@@ -79,7 +60,6 @@ struct WatchChatView: View {
                 }
             }
         }
-        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {

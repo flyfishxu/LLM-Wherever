@@ -56,7 +56,6 @@ struct HistoryView: View {
                             }) {
                                 HistoryRowView(history: history)
                             }
-                            .glassEffect()
                             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                 Button(role: .destructive) {
                                     historyManager.deleteChatHistory(history)
