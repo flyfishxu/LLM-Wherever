@@ -67,6 +67,13 @@ class DefaultSettingsViewModel: ObservableObject {
         // Note: hasUnsavedChanges will be updated automatically by didSet
     }
     
+    /// Check if current settings are at default values
+    var isAtDefaultValues: Bool {
+        return systemPrompt == "You are a helpful AI assistant." &&
+               temperature == 0.7 &&
+               maxTokens == 2000
+    }
+    
     private func updateSharedSettings(_ settings: DefaultModelSettings) {
         // This is a simple way to update the shared instance
         // In a real app, you might want to use a more sophisticated state management approach

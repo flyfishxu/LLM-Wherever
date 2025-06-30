@@ -11,6 +11,17 @@ struct SettingsTabView: View {
     @StateObject private var viewModel = DefaultSettingsViewModel()
     @StateObject private var ttsService = TTSService.shared
     
+    /// Check if all settings are at their default values
+    private var areAllSettingsAtDefaults: Bool {
+        return viewModel.isAtDefaultValues && ttsService.isAtDefaultValues
+    }
+    
+    /// Reset all settings to their default values
+    private func resetAllSettings() {
+        viewModel.resetToSystemDefaults()
+        ttsService.resetToDefaults()
+    }
+    
     var body: some View {
         NavigationStack {
             Form {
@@ -65,9 +76,10 @@ struct SettingsTabView: View {
                 
                 Section {
                     Button("Reset to System Defaults") {
-                        viewModel.resetToSystemDefaults()
+                        resetAllSettings()
                     }
                     .foregroundStyle(.red)
+                    .disabled(areAllSettingsAtDefaults)
                 } header: {
                     Text("Reset")
                 } footer: {

@@ -129,6 +129,18 @@ class TTSService: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
         WatchConnectivityManager.shared.syncTTSToWatch(settings)
     }
     
+    /// Reset TTS settings to default values
+    func resetToDefaults() {
+        settings = TTSSettings() // Use default initializer
+        hasUnsavedChanges = true
+    }
+    
+    /// Check if current settings are at default values
+    var isAtDefaultValues: Bool {
+        let defaultSettings = TTSSettings()
+        return settings == defaultSettings
+    }
+    
     /// Clean text for better TTS output
     private func cleanTextForTTS(_ text: String) -> String {
         var cleanedText = text
