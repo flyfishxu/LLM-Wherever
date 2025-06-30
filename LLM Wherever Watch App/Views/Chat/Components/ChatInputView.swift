@@ -1,5 +1,5 @@
 //
-//  WatchChatInputView.swift
+//  ChatInputView.swift
 //  LLM Wherever Watch App
 //
 //  Created by FlyfishXu on 2025/6/30.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct WatchChatInputView: View {
+struct ChatInputView: View {
     @Binding var inputText: String
     @FocusState private var isTextFieldFocused: Bool
     let onSendMessage: (String) -> Void
@@ -39,7 +39,7 @@ struct WatchChatInputView: View {
 }
 
 #Preview {
-    WatchChatInputView(
+    ChatInputView(
         inputText: .constant(""),
         onSendMessage: { _ in }
     )

@@ -1,5 +1,5 @@
 //
-//  WatchSetupInstructionView.swift
+//  SetupInstructionView.swift
 //  LLM Wherever Watch App
 //
 //  Created by FlyfishXu on 2025/6/30.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct WatchSetupInstructionView: View {
+struct SetupInstructionView: View {
     let hasProviders: Bool
     
     var body: some View {
@@ -50,8 +50,8 @@ struct WatchSetupInstructionView: View {
 
 #Preview {
     VStack(spacing: 20) {
-        WatchSetupInstructionView(hasProviders: false)
-        WatchSetupInstructionView(hasProviders: true)
+        SetupInstructionView(hasProviders: false)
+        SetupInstructionView(hasProviders: true)
     }
     .padding()
 } 

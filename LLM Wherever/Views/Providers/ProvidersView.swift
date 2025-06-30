@@ -74,7 +74,7 @@ struct ProvidersView: View {
                             .padding(.vertical, 8)
                     }
                 } header: {
-                    Text("Watch Default Selection")
+                    Text("Default Selection")
                 } footer: {
                     Text("Set the default AI provider and model that will be used on Apple Watch.")
                 }

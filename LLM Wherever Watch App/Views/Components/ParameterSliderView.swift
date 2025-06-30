@@ -1,5 +1,5 @@
 //
-//  WatchParameterSliderView.swift
+//  ParameterSliderView.swift
 //  LLM Wherever Watch App
 //
 //  Created by FlyfishXu on 2025/6/30.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct WatchParameterSliderView: View {
+struct ParameterSliderView: View {
     let title: String
     let systemImage: String
     @Binding var value: Double
@@ -119,7 +119,7 @@ struct WatchIntParameterSliderView: View {
     @State private var doubleValue: Double = 0
     
     var body: some View {
-        WatchParameterSliderView(
+        ParameterSliderView(
             title: title,
             systemImage: systemImage,
             value: $doubleValue,
@@ -147,7 +147,7 @@ struct WatchIntParameterSliderView: View {
     NavigationStack {
         List {
             Section {
-                WatchParameterSliderView(
+                ParameterSliderView(
                     title: "Temperature",
                     systemImage: "thermometer",
                     value: .constant(0.7),

@@ -1,5 +1,5 @@
 //
-//  WatchConnectionStatusView.swift
+//  ConnectionStatusView.swift
 //  LLM Wherever Watch App
 //
 //  Created by FlyfishXu on 2025/6/30.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct WatchConnectionStatusView: View {
+struct ConnectionStatusView: View {
     let isConnected: Bool
     let isSyncing: Bool
     let hasProviders: Bool
@@ -70,9 +70,9 @@ struct WatchConnectionStatusView: View {
 
 #Preview {
     VStack(spacing: 10) {
-        WatchConnectionStatusView(isConnected: false, isSyncing: false, hasProviders: false)
-        WatchConnectionStatusView(isConnected: true, isSyncing: true, hasProviders: false)
-        WatchConnectionStatusView(isConnected: true, isSyncing: false, hasProviders: true)
-        WatchConnectionStatusView(isConnected: true, isSyncing: false, hasProviders: false)
+        ConnectionStatusView(isConnected: false, isSyncing: false, hasProviders: false)
+        ConnectionStatusView(isConnected: true, isSyncing: true, hasProviders: false)
+        ConnectionStatusView(isConnected: true, isSyncing: false, hasProviders: true)
+        ConnectionStatusView(isConnected: true, isSyncing: false, hasProviders: false)
     }
 }

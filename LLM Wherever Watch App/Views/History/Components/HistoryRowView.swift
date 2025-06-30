@@ -14,20 +14,20 @@ struct HistoryRowView: View {
         VStack(alignment: .leading, spacing: 3) {
             HStack {
                 Text(history.displayTitle)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.primary)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
                     .lineLimit(1)
                 
                 Spacer()
                 
                 Text(formatDate(history.lastUpdatedAt))
-                    .font(.system(size: 10))
+                    .font(.caption)
                     .foregroundColor(.secondary)
             }
             
             if !history.previewText.isEmpty {
                 Text(history.previewText)
-                    .font(.system(size: 11))
+                    .font(.caption2)
                     .foregroundColor(.secondary)
                     .lineLimit(2)
             }
@@ -35,9 +35,10 @@ struct HistoryRowView: View {
             // Message count with icon
             HStack(spacing: 3) {
                 Image(systemName: "message.fill")
-                    .font(.system(size: 8))
+                    .font(.system(size: 10))
                 Text("\(history.messageCount)")
-                    .font(.system(size: 10, weight: .medium))
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
                 Spacer()
             }
             .foregroundColor(.blue)

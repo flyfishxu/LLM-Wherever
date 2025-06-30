@@ -1,5 +1,5 @@
 //
-//  WatchChatView.swift
+//  ChatView.swift
 //  LLM Wherever Watch App
 //
 //  Created by FlyfishXu on 2025/6/29.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct WatchChatView: View {
+struct ChatView: View {
     @Binding var chatMessages: [ChatMessage]
     @Binding var inputText: String
     @Binding var isLoading: Bool
@@ -27,11 +27,11 @@ struct WatchChatView: View {
                 ScrollView {
                     LazyVStack(spacing: 4) {
                         ForEach(chatMessages) { message in
-                            WatchChatBubbleView(message: message)
+                            ChatBubbleView(message: message)
                                 .id(message.id)
                         }
                         
-                        WatchChatInputView(
+                        ChatInputView(
                             inputText: $inputText,
                             onSendMessage: onSendMessage
                         )
@@ -92,7 +92,7 @@ struct WatchChatView: View {
 
 #Preview {
     NavigationStack {
-        WatchChatView(
+        ChatView(
             chatMessages: .constant([
                 ChatMessage(role: .user, content: "Hello!"),
                 ChatMessage(role: .assistant, content: "Hi there! How can I help you?", modelInfo: "GPT-4")

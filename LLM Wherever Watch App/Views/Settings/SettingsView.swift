@@ -16,7 +16,7 @@ struct SettingsView: View {
             List {
                 Section {
                     ForEach(connectivityManager.apiProviders) { provider in
-                        WatchProviderRowView(
+                        ProviderRowView(
                             provider: provider,
                             isSelected: connectivityManager.selectedProvider?.id == provider.id,
                             onTap: {
@@ -32,7 +32,7 @@ struct SettingsView: View {
                    !selectedProvider.models.isEmpty {
                     Section {
                         ForEach(selectedProvider.models) { model in
-                            WatchModelRowView(
+                            ModelRowView(
                                 model: model,
                                 isSelected: connectivityManager.selectedModel?.id == model.id,
                                 onTap: {
@@ -47,7 +47,7 @@ struct SettingsView: View {
                 
                 
                 Section {
-                    WatchConnectionStatusView(
+                    ConnectionStatusView(
                         isConnected: connectivityManager.isConnected,
                         isSyncing: connectivityManager.isSyncing,
                         hasProviders: !connectivityManager.apiProviders.isEmpty

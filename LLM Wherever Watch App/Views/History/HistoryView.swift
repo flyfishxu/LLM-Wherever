@@ -19,7 +19,7 @@ struct HistoryView: View {
                 if historyManager.hasHistories {
                     List {
                         // New Chat Navigation Link
-                        NavigationLink(destination: WatchChatView(
+                        NavigationLink(destination: ChatView(
                             chatMessages: $chatViewModel.chatMessages,
                             inputText: $chatViewModel.inputText,
                             isLoading: $chatViewModel.isLoading,
@@ -43,7 +43,7 @@ struct HistoryView: View {
                         
                         // History List
                         ForEach(historyManager.recentHistories) { history in
-                            NavigationLink(destination: WatchChatView(
+                            NavigationLink(destination: ChatView(
                                 chatMessages: $chatViewModel.chatMessages,
                                 inputText: $chatViewModel.inputText,
                                 isLoading: $chatViewModel.isLoading,
@@ -81,7 +81,7 @@ struct HistoryView: View {
                     }
                 } else {
                     // Empty State
-                    emptyStateView
+                    EmptyStateView()
                 }
             }
             .sheet(isPresented: $showingSettings) {
@@ -89,37 +89,9 @@ struct HistoryView: View {
             }
         }
     }
-    
-    private var emptyStateView: some View {
-        NavigationStack {
-            WatchEmptyStateView(
-                icon: "message.circle",
-                title: "No Conversations",
-                subtitle: "Start chatting to see history",
-                actionButton: AnyView(
-                    NavigationLink(destination: WatchChatView(
-                        chatMessages: $chatViewModel.chatMessages,
-                        inputText: $chatViewModel.inputText,
-                        isLoading: $chatViewModel.isLoading,
-                        errorMessage: $chatViewModel.errorMessage,
-                        onSendMessage: chatViewModel.sendTextMessage,
-                        onClearError: chatViewModel.clearError
-                    ).onAppear {
-                        chatViewModel.startNewChat()
-                    }) {
-                        WatchNewChatButton(style: .emptyState) {
-                            // Navigation link handles the action
-                        }
-                    }
-                )
-            )
-            .navigationBarTitleDisplayMode(.inline)
-        }
-    }
 }
-
 
 
 #Preview {
     HistoryView()
-} 
+}

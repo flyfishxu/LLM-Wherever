@@ -1,5 +1,5 @@
 //
-//  WatchModelRowView.swift
+//  ProviderRowView.swift
 //  LLM Wherever Watch App
 //
 //  Created by FlyfishXu on 2025/6/30.
@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct WatchModelRowView: View {
-    let model: LLMModel
+struct ProviderRowView: View {
+    let provider: APIProvider
     let isSelected: Bool
     let onTap: () -> Void
     
@@ -16,10 +16,10 @@ struct WatchModelRowView: View {
         Button(action: onTap) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(model.effectiveName)
+                    Text(provider.name)
                         .font(.headline)
                         .foregroundStyle(.primary)
-                    Text(model.identifier)
+                    Text("\(provider.models.count) models")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -39,13 +39,13 @@ struct WatchModelRowView: View {
 
 #Preview {
     List {
-        WatchModelRowView(
-            model: LLMModel(name: "GPT-4", identifier: "gpt-4"),
+        ProviderRowView(
+            provider: APIProvider(name: "OpenAI", baseURL: "", apiKey: "", models: []),
             isSelected: true,
             onTap: { }
         )
-        WatchModelRowView(
-            model: LLMModel(name: "GPT-3.5", identifier: "gpt-3.5-turbo"),
+        ProviderRowView(
+            provider: APIProvider(name: "Anthropic", baseURL: "", apiKey: "", models: []),
             isSelected: false,
             onTap: { }
         )

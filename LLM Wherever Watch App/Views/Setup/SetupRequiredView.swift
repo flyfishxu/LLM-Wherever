@@ -15,9 +15,9 @@ struct SetupRequiredView: View {
     var body: some View {
         VStack(spacing: 16) {
             VStack(spacing: 12) {
-                WatchSetupInstructionView(hasProviders: hasAnyProviders)
+                SetupInstructionView(hasProviders: hasAnyProviders)
                 
-                WatchConnectionStatusView(
+                ConnectionStatusView(
                     isConnected: isConnected,
                     isSyncing: isSyncing,
                     hasProviders: hasAnyProviders

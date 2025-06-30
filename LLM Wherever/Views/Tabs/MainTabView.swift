@@ -17,12 +17,12 @@ struct MainTabView: View {
                     ProvidersView()
                 }
                 
-                Tab("Search", systemImage: "magnifyingglass", role: .search) {
-                    SearchView()
-                }
-                
                 Tab("Settings", systemImage: "gearshape") {
                     SettingsTabView()
+                }
+                
+                Tab("Search", systemImage: "magnifyingglass", role: .search) {
+                    SearchView()
                 }
             }
         } else {
@@ -33,16 +33,16 @@ struct MainTabView: View {
                         Text("Home")
                     }
                 
-                SearchView()
-                    .tabItem {
-                        Image(systemName: "magnifyingglass")
-                        Text("Search")
-                    }
-                
                 SettingsTabView()
                     .tabItem {
                         Image(systemName: "gearshape")
                         Text("Settings")
+                    }
+                
+                SearchView()
+                    .tabItem {
+                        Image(systemName: "magnifyingglass")
+                        Text("Search")
                     }
             }
         }

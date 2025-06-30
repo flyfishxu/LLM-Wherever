@@ -1,5 +1,5 @@
 //
-//  WatchNewChatButton.swift
+//  NewChatButton.swift
 //  LLM Wherever Watch App
 //
 //  Created by FlyfishXu on 2025/6/30.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct WatchNewChatButton: View {
+struct NewChatButton: View {
     let style: ButtonStyle
     let action: () -> Void
     
@@ -51,7 +51,7 @@ struct WatchNewChatButton: View {
 
 #Preview {
     VStack(spacing: 20) {
-        WatchNewChatButton(style: .listRow) { }
-        WatchNewChatButton(style: .emptyState) { }
+        NewChatButton(style: .listRow) { }
+        NewChatButton(style: .emptyState) { }
     }
 } 

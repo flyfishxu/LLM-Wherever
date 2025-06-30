@@ -120,12 +120,6 @@ struct APIProviderDetailView: View {
                     }
                     .fontWeight(.semibold)
                 }
-                
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
             }
             .sheet(isPresented: $viewModel.showingAddModel) {
                 AddModelView { model in

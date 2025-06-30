@@ -1,5 +1,5 @@
 //
-//  WatchChatBubbleView.swift
+//  ChatBubbleView.swift
 //  LLM Wherever Watch App
 //
 //  Created by FlyfishXu on 2025/6/29.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct WatchChatBubbleView: View {
+struct ChatBubbleView: View {
     let message: ChatMessage
     @State private var isThinkingCollapsed: Bool = true
     
@@ -211,9 +211,9 @@ struct WatchChatBubbleView: View {
 
 #Preview {
     VStack(spacing: 8) {
-        WatchChatBubbleView(message: ChatMessage(role: .user, content: "Hello, this is a test message!"))
+        ChatBubbleView(message: ChatMessage(role: .user, content: "Hello, this is a test message!"))
         
-        WatchChatBubbleView(message: ChatMessage(
+        ChatBubbleView(message: ChatMessage(
             role: .assistant,
             content: "Hi there! How can I help you?",
             modelInfo: "GPT-4",
@@ -222,7 +222,7 @@ struct WatchChatBubbleView: View {
         ))
         
         // Loading state example
-        WatchChatBubbleView(
+        ChatBubbleView(
             message: ChatMessage(role: .assistant, content: "", modelInfo: "GPT-4")
         )
     }
