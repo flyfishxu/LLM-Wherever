@@ -16,20 +16,24 @@ class ChatViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var streamingMessageId: UUID?
+    @Published var currentHistoryID: UUID? // Track current chat history
     
     // MARK: - Dependencies
     private let llmService: LLMService
     private let connectivityManager: WatchConnectivityManager
+    private let historyManager: HistoryManager
     
     // MARK: - Initialization
     init(
         llmService: LLMService = LLMService.shared,
-        connectivityManager: WatchConnectivityManager = WatchConnectivityManager.shared
+        connectivityManager: WatchConnectivityManager = WatchConnectivityManager.shared,
+        historyManager: HistoryManager = HistoryManager.shared
     ) {
         self.llmService = llmService
         self.connectivityManager = connectivityManager
+        self.historyManager = historyManager
         
-        // 监听provider和model的变化
+        // Listen for provider and model changes
         setupObservers()
     }
     
@@ -67,6 +71,54 @@ class ChatViewModel: ObservableObject {
     
     func clearError() {
         errorMessage = nil
+    }
+    
+    // MARK: - History Management
+    
+    /// Start a new chat (clear current messages and history reference)
+    func startNewChat() {
+        currentHistoryID = nil
+        chatMessages.removeAll()
+        initializeChatWithSystemPrompt()
+    }
+    
+    /// Load chat from history
+    func loadChatFromHistory(_ history: ChatHistory) {
+        currentHistoryID = history.id
+        chatMessages = history.messages
+        
+        // Try to set the provider and model from history if they exist
+        if let providerID = history.providerID,
+           let provider = connectivityManager.apiProviders.first(where: { $0.id == providerID }) {
+            connectivityManager.setSelectedProvider(provider)
+            
+            if let modelID = history.modelID,
+               let model = provider.models.first(where: { $0.id == modelID }) {
+                connectivityManager.setSelectedModel(model)
+            }
+        }
+    }
+    
+    /// Save current chat to history
+    func saveCurrentChatToHistory() {
+        guard !chatMessages.isEmpty,
+              let provider = connectivityManager.selectedProvider,
+              let model = connectivityManager.selectedModel else { return }
+        
+        if let historyID = currentHistoryID {
+            // Update existing history
+            historyManager.updateHistoryMessages(historyID, messages: chatMessages)
+        } else {
+            // Create new history
+            let history = historyManager.createHistoryFromMessages(
+                chatMessages,
+                providerID: provider.id,
+                modelID: model.id,
+                providerName: provider.name,
+                modelName: model.effectiveName
+            )
+            currentHistoryID = history.id
+        }
     }
     
     // MARK: - Private Methods
@@ -162,6 +214,9 @@ class ChatViewModel: ObservableObject {
         isLoading = false
         streamingMessageId = nil
         WKInterfaceDevice.current().play(.success)
+        
+        // Auto-save to history after message completion
+        saveCurrentChatToHistory()
     }
     
     private func handleStreamingError(_ error: Error) {

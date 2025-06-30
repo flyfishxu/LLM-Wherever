@@ -49,6 +49,15 @@ class WatchConnectivityManager: NSObject, ObservableObject {
         saveSelections()
     }
     
+    // Additional methods for history support
+    func setSelectedProvider(_ provider: APIProvider) {
+        selectProvider(provider)
+    }
+    
+    func setSelectedModel(_ model: LLMModel) {
+        selectModel(model)
+    }
+    
 
     
     // Save API providers to local storage

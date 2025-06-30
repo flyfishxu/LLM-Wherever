@@ -13,14 +13,35 @@ struct WatchChatView: View {
     @Binding var isLoading: Bool
     @Binding var errorMessage: String?
     
+    @StateObject private var connectivityManager = WatchConnectivityManager.shared
     @FocusState private var isTextFieldFocused: Bool
     @State private var scrollID = UUID() // For triggering scroll updates
+    @State private var showingSettings = false
     
     let onSendMessage: (String) -> Void
     let onClearError: () -> Void
     
     var body: some View {
         VStack(spacing: 0) {
+            // Current model indicator
+            if let selectedModel = connectivityManager.selectedModel {
+                HStack {
+                    Image(systemName: "brain.head.profile")
+                        .font(.system(size: 10))
+                        .foregroundColor(.blue)
+                    Text(selectedModel.effectiveName)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.blue)
+                    Spacer()
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(.blue.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .padding(.horizontal, 8)
+                .padding(.bottom, 4)
+            }
+            
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 4) {
@@ -58,6 +79,20 @@ struct WatchChatView: View {
                 }
             }
         }
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showingSettings = true
+                } label: {
+                    Image(systemName: "gear")
+                        .font(.system(size: 14))
+                }
+            }
+        }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView()
+        }
         .alert("Error", isPresented: .constant(errorMessage != nil)) {
             Button("OK") {
                 onClearError()
@@ -68,8 +103,6 @@ struct WatchChatView: View {
             }
         }
     }
-    
-
     
     private var inputSection: some View {
         VStack(spacing: 12) {
@@ -97,15 +130,17 @@ struct WatchChatView: View {
 }
 
 #Preview {
-    WatchChatView(
-        chatMessages: .constant([
-            ChatMessage(role: .user, content: "Hello!"),
-            ChatMessage(role: .assistant, content: "Hi there! How can I help you?", modelInfo: "GPT-4")
-        ]),
-        inputText: .constant(""),
-        isLoading: .constant(false),
-        errorMessage: .constant(nil),
-        onSendMessage: { _ in },
-        onClearError: { }
-    )
+    NavigationStack {
+        WatchChatView(
+            chatMessages: .constant([
+                ChatMessage(role: .user, content: "Hello!"),
+                ChatMessage(role: .assistant, content: "Hi there! How can I help you?", modelInfo: "GPT-4")
+            ]),
+            inputText: .constant(""),
+            isLoading: .constant(false),
+            errorMessage: .constant(nil),
+            onSendMessage: { _ in },
+            onClearError: { }
+        )
+    }
 } 

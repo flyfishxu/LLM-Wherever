@@ -131,4 +131,50 @@ struct ChatMessage: Identifiable, Codable, Equatable {
     var thinkingContent: String? // The thinking process content
     var thinkingDuration: TimeInterval? // How long the thinking took in seconds
     var isThinkingCollapsed: Bool = true // Whether thinking section is collapsed
+}
+
+// MARK: - Chat History
+struct ChatHistory: Identifiable, Codable, Equatable {
+    var id = UUID()
+    var title: String // Auto-generated or user-defined title
+    var messages: [ChatMessage]
+    var createdAt = Date()
+    var lastUpdatedAt = Date()
+    
+    // Store the provider and model information used in this chat
+    var providerID: UUID?
+    var modelID: UUID?
+    var providerName: String? // Fallback display name
+    var modelName: String? // Fallback display name
+    
+    // Computed properties
+    var displayTitle: String {
+        if title.isEmpty {
+            // Generate title from first user message or use timestamp
+            if let firstUserMessage = messages.first(where: { $0.role == .user }) {
+                let preview = String(firstUserMessage.content.prefix(30))
+                return preview.isEmpty ? formatDate(createdAt) : preview
+            }
+            return formatDate(createdAt)
+        }
+        return title
+    }
+    
+    var previewText: String {
+        if let lastMessage = messages.last(where: { $0.role == .user || $0.role == .assistant }) {
+            return String(lastMessage.content.prefix(50))
+        }
+        return "No messages"
+    }
+    
+    var messageCount: Int {
+        messages.filter { $0.role == .user || $0.role == .assistant }.count
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
 } 
