@@ -17,28 +17,36 @@ class TTSService: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
     @Published var isPaused = false
     
     // TTS Settings
-    @Published var settings: TTSSettings {
-        didSet {
-            settings.save()
-        }
-    }
+    @Published var settings: TTSSettings
+    
+    // Track if settings have been modified
+    @Published var hasUnsavedChanges = false
     
     var isUpdatingFromiPhone = false
     
     // Convenience computed properties
     var autoTTSAfterResponse: Bool {
         get { settings.autoTTSAfterResponse }
-        set { settings.autoTTSAfterResponse = newValue }
+        set { 
+            settings.autoTTSAfterResponse = newValue
+            hasUnsavedChanges = true
+        }
     }
     
     var speechRate: Float {
         get { settings.speechRate }
-        set { settings.speechRate = newValue }
+        set { 
+            settings.speechRate = newValue
+            hasUnsavedChanges = true
+        }
     }
     
     var voiceLanguage: String {
         get { settings.voiceLanguage }
-        set { settings.voiceLanguage = newValue }
+        set { 
+            settings.voiceLanguage = newValue
+            hasUnsavedChanges = true
+        }
     }
     
     private override init() {
@@ -109,7 +117,18 @@ class TTSService: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
     func updateSettings(_ newSettings: TTSSettings) {
         isUpdatingFromiPhone = true
         settings = newSettings
+        hasUnsavedChanges = false
         isUpdatingFromiPhone = false
+    }
+    
+    /// Save settings and sync to iPhone
+    func saveSettings() {
+        settings.save()
+        hasUnsavedChanges = false
+        // Only sync if not updating from iPhone to prevent loops
+        if !isUpdatingFromiPhone {
+            WatchConnectivityManager.shared.syncTTSToPhone()
+        }
     }
     
     /// Clean text for better TTS output

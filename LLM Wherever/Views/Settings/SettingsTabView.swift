@@ -79,8 +79,10 @@ struct SettingsTabView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
                         viewModel.saveSettings()
+                        ttsService.saveSettings()
                     }
                     .fontWeight(.semibold)
+                    .disabled(!viewModel.hasUnsavedChanges && !ttsService.hasUnsavedChanges)
                 }
             }
         }

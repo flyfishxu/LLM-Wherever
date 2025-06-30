@@ -13,12 +13,6 @@ struct TTSSettingsView: View {
     var body: some View {
         Group {
             Toggle("Auto TTS after Response", isOn: $ttsService.autoTTSAfterResponse)
-                .onChange(of: ttsService.autoTTSAfterResponse) {
-                    // Only sync if this is a user change, not from iPhone
-                    if !ttsService.isUpdatingFromiPhone {
-                        WatchConnectivityManager.shared.syncTTSToPhone()
-                    }
-                }
             
             // Show TTS controls only when actively speaking
             if ttsService.isSpeaking {

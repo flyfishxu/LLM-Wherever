@@ -68,9 +68,11 @@ struct SettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
+                        ttsService.saveSettings()
                         dismiss()
                     }
                     .font(.caption)
+                    .disabled(!ttsService.hasUnsavedChanges)
                 }
             }
         }
