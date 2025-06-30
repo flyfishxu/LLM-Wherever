@@ -14,23 +14,12 @@ struct ProvidersView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section {
-                    HStack {
-                        Image(systemName: "applewatch")
-                            .foregroundStyle(.blue)
-                            .font(.title2)
-                        VStack(alignment: .leading) {
-                            Text("LLM Wherever")
-                                .font(.headline)
-                            Text("Use Large Language Models on Apple Watch")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .padding(.vertical, 8)
-                } header: {
-                    Text("App Introduction")
-                }
+                InformationSection(
+                    header: "Information",
+                    title: "LLM Wherever",
+                    content: "Use Large Language Models on Apple Watch",
+                    icon: "applewatch"
+                )
                 
                 Section {
                     if mainViewModel.hasProviders {
