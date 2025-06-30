@@ -11,6 +11,7 @@ struct MessageActionSheet: View {
     let message: ChatMessage
     let onDelete: ((UUID) -> Void)?
     let onRegenerate: ((UUID) -> Void)?
+    let onSpeak: ((UUID) -> Void)?
     
     @Environment(\.dismiss) private var dismiss
     
@@ -70,6 +71,34 @@ struct MessageActionSheet: View {
                     )
                 }
                 .buttonStyle(.plain)
+                
+                // Speak button (only for assistant messages with content)
+                if !message.content.isEmpty {
+                    Button(action: {
+                        onSpeak?(message.id)
+                        dismiss()
+                    }) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "speaker.wave.2")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(.green)
+                                .frame(width: 20)
+                            
+                            Text("Read")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(.green)
+                            
+                            Spacer()
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(.green.opacity(0.1))
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         }
         .padding(.horizontal, 16)
@@ -81,6 +110,7 @@ struct MessageActionSheet: View {
     MessageActionSheet(
         message: ChatMessage(id: UUID(), role: .assistant, content: "This is a test message"),
         onDelete: { _ in },
-        onRegenerate: { _ in }
+        onRegenerate: { _ in },
+        onSpeak: { _ in }
     )
 }

@@ -96,6 +96,32 @@ class TTSService: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
         synthesizer.speak(utterance)
     }
     
+    /// Manually speak the provided text (regardless of auto TTS settings)
+    func speakManually(_ text: String) {
+        guard !text.isEmpty else { return }
+        
+        // Stop any current speech
+        stop()
+        
+        // Clean text for better TTS (remove markdown, special characters, etc.)
+        let cleanedText = cleanTextForTTS(text)
+        
+        let utterance = AVSpeechUtterance(string: cleanedText)
+        utterance.rate = speechRate
+        utterance.pitchMultiplier = 1.0
+        utterance.volume = 1.0
+        
+        // Try to use preferred language voice
+        if let voice = AVSpeechSynthesisVoice(language: voiceLanguage) {
+            utterance.voice = voice
+        } else {
+            // Fallback to default voice
+            utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        }
+        
+        synthesizer.speak(utterance)
+    }
+    
     /// Pause current speech
     func pause() {
         guard isSpeaking else { return }

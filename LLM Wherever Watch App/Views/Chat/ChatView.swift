@@ -24,6 +24,13 @@ struct ChatView: View {
     let onDeleteMessage: ((UUID) -> Void)?
     let onRegenerateMessage: ((UUID) -> Void)?
     
+    // Handle speaking a message by its ID
+    private func onSpeakMessage(_ messageID: UUID) {
+        if let message = chatMessages.first(where: { $0.id == messageID }) {
+            ttsService.speakManually(message.content)
+        }
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             ScrollViewReader { proxy in
@@ -33,7 +40,8 @@ struct ChatView: View {
                             ChatBubbleView(
                                 message: message,
                                 onDelete: onDeleteMessage,
-                                onRegenerate: onRegenerateMessage
+                                onRegenerate: onRegenerateMessage,
+                                onSpeak: onSpeakMessage
                             )
                             .id(message.id)
                         }

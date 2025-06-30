@@ -12,14 +12,16 @@ struct ChatBubbleView: View {
     let message: ChatMessage
     let onDelete: ((UUID) -> Void)?
     let onRegenerate: ((UUID) -> Void)?
+    let onSpeak: ((UUID) -> Void)?
     
     @State private var isThinkingCollapsed: Bool = true
     @State private var showingActionSheet: Bool = false
     
-    init(message: ChatMessage, onDelete: ((UUID) -> Void)? = nil, onRegenerate: ((UUID) -> Void)? = nil) {
+    init(message: ChatMessage, onDelete: ((UUID) -> Void)? = nil, onRegenerate: ((UUID) -> Void)? = nil, onSpeak: ((UUID) -> Void)? = nil) {
         self.message = message
         self.onDelete = onDelete
         self.onRegenerate = onRegenerate
+        self.onSpeak = onSpeak
     }
     
     var isSystemMessage: Bool {
@@ -116,7 +118,8 @@ struct ChatBubbleView: View {
             MessageActionSheet(
                 message: message,
                 onDelete: onDelete,
-                onRegenerate: onRegenerate
+                onRegenerate: onRegenerate,
+                onSpeak: onSpeak
             )
         }
     }
@@ -237,7 +240,8 @@ struct ChatBubbleView: View {
         ChatBubbleView(
             message: ChatMessage(role: .user, content: "Hello!"),
             onDelete: { _ in print("Delete message") },
-            onRegenerate: { _ in print("Regenerate message") }
+            onRegenerate: { _ in print("Regenerate message") },
+            onSpeak: { _ in print("Speak message") }
         )
         
         ChatBubbleView(
@@ -247,7 +251,8 @@ struct ChatBubbleView: View {
                 modelInfo: "GPT-4"
             ),
             onDelete: { _ in print("Delete message") },
-            onRegenerate: { _ in print("Regenerate message") }
+            onRegenerate: { _ in print("Regenerate message") },
+            onSpeak: { _ in print("Speak message") }
         )
         
         ChatBubbleView(
@@ -259,7 +264,8 @@ struct ChatBubbleView: View {
                 thinkingDuration: nil  // Still thinking
             ),
             onDelete: { _ in print("Delete message") },
-            onRegenerate: { _ in print("Regenerate message") }
+            onRegenerate: { _ in print("Regenerate message") },
+            onSpeak: { _ in print("Speak message") }
         )
     }
 }
