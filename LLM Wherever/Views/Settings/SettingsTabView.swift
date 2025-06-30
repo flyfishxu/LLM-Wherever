@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SettingsTabView: View {
     @StateObject private var viewModel = DefaultSettingsViewModel()
+    @StateObject private var ttsService = TTSService.shared
     
     var body: some View {
         NavigationStack {
@@ -19,6 +20,8 @@ struct SettingsTabView: View {
                     content: "These settings apply to all new models that don't have custom configurations. Existing models with custom settings will not be affected.",
                     icon: "info.circle"
                 )
+                
+                TTSSettingsView(ttsService: ttsService)
                 
                 Section {
                     VStack(alignment: .leading, spacing: 8) {

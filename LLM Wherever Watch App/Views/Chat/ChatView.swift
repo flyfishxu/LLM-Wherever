@@ -14,6 +14,7 @@ struct ChatView: View {
     @Binding var errorMessage: String?
     
     @StateObject private var connectivityManager = WatchConnectivityManager.shared
+    @StateObject private var ttsService = TTSService.shared
 
     @State private var scrollID = UUID() // For triggering scroll updates
     @State private var showingSettings = false
@@ -64,12 +65,40 @@ struct ChatView: View {
             }
         }
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                if ttsService.isSpeaking {
+                    Button {
+                        if ttsService.isPaused {
+                            ttsService.resume()
+                        } else {
+                            ttsService.pause()
+                        }
+                    } label: {
+                        Image(systemName: ttsService.isPaused ? "play.fill" : "pause.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.blue)
+                    }
+                }
+            }
+            
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    showingSettings = true
-                } label: {
-                    Image(systemName: "gear")
-                        .font(.system(size: 14))
+                HStack(spacing: 8) {
+                    if ttsService.isSpeaking {
+                        Button {
+                            ttsService.stop()
+                        } label: {
+                            Image(systemName: "stop.fill")
+                                .font(.system(size: 12))
+                                .foregroundColor(.red)
+                        }
+                    }
+                    
+                    Button {
+                        showingSettings = true
+                    } label: {
+                        Image(systemName: "gear")
+                            .font(.system(size: 14))
+                    }
                 }
             }
         }
@@ -86,8 +115,6 @@ struct ChatView: View {
             }
         }
     }
-    
-
 }
 
 #Preview {

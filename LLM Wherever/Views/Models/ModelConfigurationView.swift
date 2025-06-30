@@ -163,7 +163,7 @@ struct ModelConfigurationView: View {
 }
 
 #Preview {
-    @State var sampleModel = LLMModel(name: "GPT-4", identifier: "gpt-4")
+    @Previewable @State var sampleModel = LLMModel(name: "GPT-4", identifier: "gpt-4")
     
     return ModelConfigurationView(
         model: $sampleModel

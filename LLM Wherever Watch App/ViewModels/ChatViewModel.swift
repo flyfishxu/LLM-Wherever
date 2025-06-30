@@ -22,16 +22,19 @@ class ChatViewModel: ObservableObject {
     private let llmService: LLMService
     private let connectivityManager: WatchConnectivityManager
     private let historyManager: HistoryManager
+    private let ttsService: TTSService
     
     // MARK: - Initialization
     init(
-        llmService: LLMService = LLMService.shared,
-        connectivityManager: WatchConnectivityManager = WatchConnectivityManager.shared,
-        historyManager: HistoryManager = HistoryManager.shared
+        llmService: LLMService? = nil,
+        connectivityManager: WatchConnectivityManager? = nil,
+        historyManager: HistoryManager? = nil,
+        ttsService: TTSService? = nil
     ) {
-        self.llmService = llmService
-        self.connectivityManager = connectivityManager
-        self.historyManager = historyManager
+        self.llmService = llmService ?? LLMService.shared
+        self.connectivityManager = connectivityManager ?? WatchConnectivityManager.shared
+        self.historyManager = historyManager ?? HistoryManager.shared
+        self.ttsService = ttsService ?? TTSService.shared
         
         // Listen for provider and model changes
         setupObservers()
@@ -41,7 +44,7 @@ class ChatViewModel: ObservableObject {
     func initializeChatWithSystemPrompt() {
         // Only add system prompt if chat is empty
         guard chatMessages.isEmpty,
-              let provider = connectivityManager.selectedProvider,
+              let _ = connectivityManager.selectedProvider,
               let model = connectivityManager.selectedModel else { return }
         
         // Use model's effective system prompt (custom or global default)
@@ -77,6 +80,9 @@ class ChatViewModel: ObservableObject {
     
     /// Start a new chat (clear current messages and history reference)
     func startNewChat() {
+        // Stop any ongoing TTS
+        ttsService.stop()
+        
         currentHistoryID = nil
         chatMessages.removeAll()
         initializeChatWithSystemPrompt()
@@ -84,6 +90,9 @@ class ChatViewModel: ObservableObject {
     
     /// Load chat from history
     func loadChatFromHistory(_ history: ChatHistory) {
+        // Stop any ongoing TTS
+        ttsService.stop()
+        
         currentHistoryID = history.id
         chatMessages = history.messages
         
@@ -217,9 +226,17 @@ class ChatViewModel: ObservableObject {
         
         // Auto-save to history after message completion
         saveCurrentChatToHistory()
+        
+        // Play TTS for assistant messages
+        if updatedMessage.role == .assistant && !content.isEmpty {
+            ttsService.speak(content)
+        }
     }
     
     private func handleStreamingError(_ error: Error) {
+        // Stop any ongoing TTS
+        ttsService.stop()
+        
         // Remove failed message
         if let messageId = streamingMessageId,
            let index = chatMessages.firstIndex(where: { $0.id == messageId }) {

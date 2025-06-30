@@ -115,6 +115,30 @@ class WatchConnectivityManager: NSObject, ObservableObject {
         }
     }
     
+    // Sync TTS settings from Watch to iPhone
+    func syncTTSToPhone() {
+        guard WCSession.default.isReachable else {
+            print("iPhone is not reachable, TTS settings will sync in background")
+            return
+        }
+        
+        guard let ttsData = try? JSONEncoder().encode(TTSSettings.shared) else {
+            print("Failed to encode TTS settings")
+            return
+        }
+        
+        let message = [
+            "action": "updateTTSFromWatch",
+            "ttsSettingsBase64": ttsData.base64EncodedString()
+        ]
+        
+        WCSession.default.sendMessage(message, replyHandler: { response in
+            print("TTS settings successfully synced to iPhone")
+        }) { error in
+            print("Failed to sync TTS settings to iPhone: \(error.localizedDescription)")
+        }
+    }
+    
     // Sync data to local storage
     private func syncLocalData(providers: [APIProvider], selectedProvider: APIProvider?, selectedModel: LLMModel?) {
         // Update local API providers
@@ -188,6 +212,16 @@ extension WatchConnectivityManager: WCSessionDelegate {
                 return
             }
             
+            // Handle TTS settings update
+            if let ttsBase64 = message["ttsSettingsBase64"] as? String,
+               let data = Data(base64Encoded: ttsBase64),
+               let ttsSettings = try? JSONDecoder().decode(TTSSettings.self, from: data) {
+                TTSService.shared.updateSettings(ttsSettings)
+                print("Updated TTS settings from iPhone (immediate)")
+                replyHandler(["status": "ttsUpdated"])
+                return
+            }
+            
             // For other message types, simply reply with confirmation
             replyHandler(["status": "received"])
         }
@@ -208,7 +242,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
     }
     
     // Load data from application context
-    private func loadDataFromApplicationContext() {
+    @MainActor private func loadDataFromApplicationContext() {
         let context = WCSession.default.receivedApplicationContext
         guard !context.isEmpty else {
             print("Application context is empty")
@@ -219,7 +253,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
     }
     
     // Process application context data
-    private func processApplicationContext(_ context: [String: Any]) {
+    @MainActor private func processApplicationContext(_ context: [String: Any]) {
         self.isSyncing = true
         
         var receivedProviders: [APIProvider] = []
@@ -250,6 +284,14 @@ extension WatchConnectivityManager: WCSessionDelegate {
            let data = Data(base64Encoded: modelBase64),
            let model = try? JSONDecoder().decode(LLMModel.self, from: data) {
             receivedSelectedModel = model
+        }
+        
+        // Parse TTS settings
+        if let ttsBase64 = context["ttsSettingsBase64"] as? String,
+           let data = Data(base64Encoded: ttsBase64),
+           let ttsSettings = try? JSONDecoder().decode(TTSSettings.self, from: data) {
+            TTSService.shared.updateSettings(ttsSettings)
+            print("Updated TTS settings from iPhone")
         }
         
         // Sync data to local storage - always sync, even if providers list is empty

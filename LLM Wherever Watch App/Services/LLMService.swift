@@ -87,7 +87,7 @@ class LLMService: ObservableObject {
         // For non-streaming responses, thinking content is usually not available
         // as it's typically only provided during streaming via reasoning_content
         let endTime = Date()
-        let duration = endTime.timeIntervalSince(startTime)
+        _ = endTime.timeIntervalSince(startTime)
         
         return (
             content: content.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -108,15 +108,13 @@ class LLMService: ObservableObject {
         onComplete: @escaping (String) -> Void, // Called when response is complete
         onError: @escaping (Error) -> Void
     ) {
-        Task {
+        Task { @MainActor in
             let startTime = Date()
             
             do {
                 // Check if provider is active
                 guard provider.isActive else {
-                    await MainActor.run {
-                        onError(LLMError.providerDisabled)
-                    }
+                    onError(LLMError.providerDisabled)
                     return
                 }
                 let url = URL(string: "\(provider.baseURL)/chat/completions")!
@@ -188,9 +186,7 @@ class LLMService: ObservableObject {
                                 completeThinking += reasoningContent
                                 
                                 // Real-time thinking content update
-                                await MainActor.run {
-                                    onThinkingUpdate(completeThinking.trimmingCharacters(in: .whitespacesAndNewlines))
-                                }
+                                onThinkingUpdate(completeThinking.trimmingCharacters(in: .whitespacesAndNewlines))
                             }
                             
                             // Check for actual content
@@ -201,31 +197,23 @@ class LLMService: ObservableObject {
                                     thinkingEndTime = Date()
                                     let thinkingDuration = thinkingEndTime!.timeIntervalSince(startTime)
                                     
-                                    await MainActor.run {
-                                        onThinkingComplete(completeThinking.trimmingCharacters(in: .whitespacesAndNewlines), thinkingDuration)
-                                    }
+                                    onThinkingComplete(completeThinking.trimmingCharacters(in: .whitespacesAndNewlines), thinkingDuration)
                                     
                                     isThinking = false
                                 }
                                 
                                 completeContent += content
                                 
-                                await MainActor.run {
-                                    onUpdate(completeContent)
-                                }
+                                onUpdate(completeContent)
                             }
                         }
                     }
                 }
                 
-                await MainActor.run {
-                    onComplete(completeContent.trimmingCharacters(in: .whitespacesAndNewlines))
-                }
+                onComplete(completeContent.trimmingCharacters(in: .whitespacesAndNewlines))
                 
             } catch {
-                await MainActor.run {
-                    onError(error)
-                }
+                onError(error)
             }
         }
     }

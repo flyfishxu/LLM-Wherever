@@ -9,11 +9,18 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject private var connectivityManager = WatchConnectivityManager.shared
+    @ObservedObject private var ttsService = TTSService.shared
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    TTSSettingsView(ttsService: ttsService)
+                } header: {
+                    Text("Text-to-Speech")
+                }
+                
                 Section {
                     ForEach(connectivityManager.apiProviders) { provider in
                         ProviderRowView(
@@ -44,7 +51,6 @@ struct SettingsView: View {
                         Text("Models")
                     }
                 }
-                
                 
                 Section {
                     ConnectionStatusView(
