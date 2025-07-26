@@ -97,22 +97,31 @@ struct ChatView: View {
             
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: 8) {
-                    if ttsService.isSpeaking {
-                        Button {
-                            ttsService.stop()
-                        } label: {
-                            Image(systemName: "stop.fill")
-                                .font(.system(size: 12))
-                                .foregroundColor(.red)
+                    ZStack {
+                        if ttsService.isSpeaking {
+                            Button {
+                                withAnimation {
+                                    ttsService.stop()
+                                }
+                            } label: {
+                                Image(systemName: "stop.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.red)
+                                    .transition(.opacity.combined(with: .scale))
+                            }
+                        } else {
+                            Button {
+                                withAnimation {
+                                    showingSettings = true
+                                }
+                            } label: {
+                                Image(systemName: "gear")
+                                    .font(.system(size: 14))
+                                    .transition(.opacity.combined(with: .scale))
+                            }
                         }
                     }
-                    
-                    Button {
-                        showingSettings = true
-                    } label: {
-                        Image(systemName: "gear")
-                            .font(.system(size: 14))
-                    }
+                    .animation(.easeInOut(duration: 0.3), value: ttsService.isSpeaking)
                 }
             }
         }
